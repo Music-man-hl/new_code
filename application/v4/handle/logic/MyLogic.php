@@ -162,6 +162,7 @@ class MyLogic extends BaseService
         }
         //获取店铺推广员报名设置
         $res = $this->query->getExtensionConfig($channel);
+        $data['is_apply'] = $res['is_apply'] ?? 1;//是否允许申请 1-允许 2-不允许
         $data['is_condition'] = $res['is_condition'] ?? 1;//1-无条件加入 2-需购买任意商品
         $data['is_review'] = $res['is_review'] ?? 1;//是否需要审核
         switch ($data['is_condition']) {

@@ -114,7 +114,11 @@ class ExtensionLogic extends BaseService
         }
         $fromId = $params['from_id'];
         //根据当前用户配置判断
-        $shopConfig = DistributionPromotionConfig::field('id,channel,is_condition,is_review,is_notice,level_up_node')->where(['channel' => $channel])->find();
+        $shopConfig = DistributionPromotionConfig::field('id,channel,is_apply,is_condition,is_review,is_notice,level_up_node')->where(['channel' => $channel])->find();
+        //判断是否允许加入
+        if ($shopConfig['is_apply'] == 2) {
+            error(50000, "商家关闭了用户申请,请联系商家！");
+        }
         //判断是否有条件
         switch ($shopConfig['is_condition']) {
             case 1://无条件加入

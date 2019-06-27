@@ -50,7 +50,7 @@ class Extension extends Base
         ExtensionLogic::service()->application($this->channels['channel'], $this->users, $this->all_param);
     }
 
-    //申请成为推广员
+    //获取当前渠道升级规则
     public function upgrade()
     {
         ExtensionLogic::service()->upgrade($this->channels['channel']);
