@@ -62,7 +62,7 @@ class Extension extends Base
         ExtensionLogic::service()->upgradeextension($this->channels['channel'], $this->users);
     }
 
-    //推广中心
+    //推广商品
     public function product()
     {
         ExtensionLogic::service()->product($this->channels['channel'], $this->users, $this->all_param);
