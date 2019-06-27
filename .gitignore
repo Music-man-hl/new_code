@@ -4,3 +4,4 @@ shop.code-workspace
 *.log
 thinkphp
 /vendor
+/runtime/
