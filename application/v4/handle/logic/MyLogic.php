@@ -133,18 +133,51 @@ class MyLogic extends BaseService
     }
 
     //获取个人中心配置
-    public function info_config($channels)
+    public function info_config($channels, $users)
     {
         $channel = $channels['channel'];
         $res = $this->query->getChannel($channel);
         $data = [];
         if (isset($res['user_cover'])) {
-            $data['user_cover'] = $res['user_cover'];
+            $data['user_cover'] = $res['user_cover'] ? getBucket('channel', 'user_cover', $res['user_cover']) : '';
         }
         //获取渠道配置是否开启推广中心
         if (isset($res['extension_status'])) {
             $data['extension_status'] = $res['extension_status'];
         }
+        //判断用户是否有分销记录
+        $res = $this->query->getUserDistribution($channel, $users);
+        if (count($res) == 0) {//无分销记录
+            $data['extension_record'] = 2;
+        } else {//有记录
+            $data['extension_record'] = 1;
+        }
+        //判断用户是否是当前店铺推广员及启用状态
+        $res = $this->query->getUser($channel, $users);
+        if ($res) {
+            $data['is_extension_user'] = 1;//是推广员
+            $data['extension_user_status'] = $res['status'] ?? 2;
+        } else {
+            $data['is_extension_user'] = 2;//不是推广员
+        }
+        //获取店铺推广员报名设置
+        $res = $this->query->getExtensionConfig($channel);
+        $data['is_condition'] = $res['is_condition'] ?? 1;//1-无条件加入 2-需购买任意商品
+        $data['is_review'] = $res['is_review'] ?? 1;//是否需要审核
+        switch ($data['is_condition']) {
+            case 1:
+                $data['is_join'] = 1;//满足加入条件
+                break;
+            case 2:
+                //查找用户购买记录有记录则满足否则不满足
+                $res = $this->query->getUserOrder($channel, $users);
+                if (count($res) > 0) {
+                    $data['is_join'] = 1;//满足加入条件
+                } else {
+                    $data['is_join'] = 2;//不满足加入条件
+                }
+        }
+
         success($data);
     }
 

@@ -24,4 +24,7 @@ return [
     "product" => [
         'pic' => 'product-pic',
     ],
+    "channel" => [
+        'user_cover' => 'shop-pic',
+    ]
 ];

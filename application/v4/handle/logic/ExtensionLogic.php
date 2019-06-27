@@ -7,6 +7,7 @@ namespace app\v4\handle\logic;
 use app\v4\model\Shop\DistributionOrder;
 use app\v4\model\Shop\DistributionProduct;
 use app\v4\model\Shop\DistributionPromotionConfig;
+use app\v4\model\Shop\DistributionQuestion;
 use app\v4\model\Shop\DistributionUpgradeCondition;
 use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\DistributionUserApply;
@@ -18,6 +19,7 @@ use app\v4\Services\BaseService;
 use app\v4\Services\EasyWeChat;
 use app\v4\Services\RabbitMQ;
 use lib\MyLog;
+use think\facade\Env;
 use think\facade\Request;
 
 class ExtensionLogic extends BaseService
@@ -201,14 +203,18 @@ class ExtensionLogic extends BaseService
     {
         $result = DistributionUpgradeCondition::field('id,channel,level,level_name,all_order_num,all_money')->where(['channel' => $channel])->select();
         if ($result) {
-            success($result);
+            $data['upgrade_condition'] = $result;
         } else {
             error(["msg" => "获取升级规则失败"]);
         }
+        //获取常见问题
+        $result = DistributionQuestion::field('id,question,answer')->where(['channel' => $channel])->select();
+        $data['question'] = $result;
+        success($data);
     }
 
     //推广中心
-    public function extension($channel, $userId)
+    public function upgradeextension($channel, $userId)
     {
         //获取用户等级等信息
         $userInfo = DistributionUser::alias('u')
@@ -287,6 +293,44 @@ class ExtensionLogic extends BaseService
             }
         }
         success(['list' => $product, 'count' => $count]);
+    }
+
+    //推广商品
+    public function poster($userId, $params)
+    {
+        if (!isset($params['product_id'])) {
+            error(40000, "product_id");
+        }
+        $productId = $params['product_id'];
+        //获取用户等级等信息
+        $userInfo = DistributionUser::field('nickname,avatar')
+            ->where(['userid' => $userId])
+            ->find();
+
+        $result['product_id'] = $productId;
+        $result['nickname'] = $userInfo['nickname'] ?? '';
+        $result['avatar'] = $userInfo['avatar'] ?? '';
+
+        //获取商品海报
+        $productInfo = DistributionProduct::field('poster')->where(['id' => $productId])->find();
+        if (!empty($productInfo['poster'])) {
+            $result['poster'] = json_decode($productInfo['poster'], true);
+        } else {
+            error(50000, '该商品未设置海报!');
+        }
+        success($result);
+    }
+
+    //获取二维码
+    public function qrcode($channel, $params)
+    {
+        //先从数据库里找 如果没有则调后台接口
+        $app_version = Env::get("MP_APP_VERSION");
+        $app_url = $params['app_url'];
+        $api = DOMAIN_MP . "/link/front_qrcode?api_version=$app_version&channel=$channel&app_url=$app_url";
+        $res = curl_file_get_contents($api);
+        print_r($res);
+        die;
     }
 }
 

@@ -9,10 +9,12 @@
 namespace app\v4\handle\logic;
 
 use app\v4\handle\hook\ProductInit;
+use app\v4\model\Main\Shop;
 use app\v4\model\Shop\DigitalArea;
 use app\v4\model\Shop\DigitalArticleRecommend;
 use app\v4\model\Shop\DigitalLine;
 use app\v4\model\Shop\DigitalProduct;
+use app\v4\model\Shop\DigitalProductRelation;
 use app\v4\model\Shop\DigitalScenic;
 use app\v4\model\Shop\DigitalSite;
 use app\v4\model\Shop\DigitalSitePoi;
@@ -36,6 +38,7 @@ class DigitalLogic extends BaseService
     const LINE_STATUS_OK = 1;//专线状态ok
     const POI_STATUS_OK = 1;//POI状态ok
     const ARTICLE_STATUS_OK = 1;//资讯状态ok
+    const AREA_STATUS_OK = 1;//area ok
 
 //  数字专线首页
     public function index($channels, $all_param)
@@ -105,7 +108,7 @@ class DigitalLogic extends BaseService
 
         //slider
         $areas = [];
-        $area = DigitalArea::where('channel', $channel)->field('id,name')->order('sorts')->select()->toArray();
+        $area = DigitalArea::where('channel', $channel)->where('status', self::AREA_STATUS_OK)->field('id,name')->order('sorts')->select()->toArray();
         !empty($area) && $areas = array_column($area, 'name', 'id');
 
         $getSliders = DigitalLine::where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::LINE_STATUS_OK)
@@ -285,9 +288,12 @@ class DigitalLogic extends BaseService
         $shop_id = $shop['shop_id'];
         $channel = $shop['channel'];
 
-        $countyLists = DigitalLine::alias('l')->join([DigitalArea::getTable() => 'a'], 'a.id=l.area_id')->field('a.name,a.id,a.cover')
-            ->where('l.channel', $channel)->where('l.shop_id', $shop_id)->where('l.status', self::LINE_STATUS_OK)
-            ->group('a.id')->order(['l.sorts', 'l.id'])->select()->toArray();
+//        $countyLists = DigitalLine::alias('l')->join([DigitalArea::getTable() => 'a'], 'a.id=l.area_id')->field('a.name,a.id,a.cover')
+//            ->where('l.channel', $channel)->where('l.shop_id', $shop_id)->where('l.status', self::LINE_STATUS_OK)
+//            ->group('a.id')->order(['l.sorts', 'l.id'])->select()->toArray();
+
+        $countyLists = DigitalArea::field('name,id,cover')->where('status', self::AREA_STATUS_OK)
+            ->where('channel', $channel)->order(['sorts', 'id'])->select()->toArray();
 
         success(['list' => empty($countyLists) ? [] : $countyLists]);
 
@@ -301,9 +307,11 @@ class DigitalLogic extends BaseService
         $shop_id = $shop['shop_id'];
         $channel = $shop['channel'];
 
-        if (!isset($all_param['article_id'])) error(40000, 'area_id必传');
-        $article_id = intval(encrypt(trim($all_param['article_id']), Status::ENCRYPT_ARTICLE, false));
-        if (empty($article_id)) error(40000, 'area_id不正确');
+        $id = isset($all_param['article_id']) ? $all_param['article_id'] : (isset($all_param['id']) ? $all_param['id'] : '');
+        if (empty($id)) error(40000, 'id必传');
+
+        $article_id = intval(encrypt(trim($id), Status::ENCRYPT_ARTICLE, false));
+        if (empty($article_id)) error(40000, 'id不正确');
 
         $article = InformationArticle::alias('a')->join([InformationArticleExt::getTable() => 'e'], 'a.id=e.article_id')
             ->field('a.title,a.avatar,a.author,a.create_time as add_time,e.content as detail')
@@ -343,16 +351,16 @@ class DigitalLogic extends BaseService
         $id = intval(encrypt(trim($all_param['id']), Status::ENCRYPT_DIGITAL, false));
         if (empty($id)) error(40000, 'id不正确');
 
-        $data = DigitalLine::where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::LINE_STATUS_OK)
-            ->field('cover,intro,intro_url as url')->get($id);
+        $data = DigitalLine::where('id', $id)->where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::LINE_STATUS_OK)
+            ->field('cover,intro,intro_url as url,appid,app_url')->find();
 
-        if ($data->isEmpty()) {
+        if (empty($data)) {
             error(50000, '没有找到此单线');
         }
 
-        $data->cover = getBucket('digital_line', 'cover', $data->cover);
+        $data['cover'] = getBucket('digital_line', 'cover', $data['cover']);
 
-        success(empty($data) ? ['cover' => '', 'intro' => '', 'url' => ''] : $data);
+        success(empty($data) ? ['cover' => '', 'intro' => '', 'url' => '', 'appid' => '', 'app_url' => ''] : $data);
 
     }
 
@@ -439,6 +447,9 @@ class DigitalLogic extends BaseService
         $id = intval(encrypt(trim($all_param['id']), Status::ENCRYPT_POI, false));
         if (empty($id)) error(40000, 'id不正确');
 
+        $type = isset($all_param['type']) ? intval($all_param['type']) : Status::SHOP_TYPE_ALL;
+        $distance = 0;
+
         $data = PoiArticle::where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::ARTICLE_STATUS_OK)
             ->get($id, ['tags']);
 
@@ -453,6 +464,19 @@ class DigitalLogic extends BaseService
             foreach ($result['images'] as $v) {
                 $images[] = getBucket('poi_article', 'images', $v);
             }
+        }
+
+        if ($type == Status::SHOP_TYPE_ALL) { //需要计算距离酒店的距离
+
+            $getShop = Shop::field('lng,lat')->where('id', $shop_id)->find();
+            if (!empty($getShop)) {
+                $lat1 = floatval($getShop['lat']);
+                $lng1 = floatval($getShop['lng']);
+                if (!empty($lat1) && !empty($lng1)) {
+                    $distance = S::getDistance($lat1, $lng1, floatval($result['lat']), floatval($result['lng']));
+                }
+            }
+
         }
 
         $list = [
@@ -471,6 +495,7 @@ class DigitalLogic extends BaseService
             'lng' => $result['lng'],
             'scenic_id' => (int)$result['scenic_id'],
             'cover' => getBucket('poi_article', 'cover', $result['cover']),
+            'distance' => $distance,
         ];
 
         success($list);
@@ -531,8 +556,8 @@ class DigitalLogic extends BaseService
             }
 
             foreach ($getPoi as $k => $v) {
-
-                if (count($v) <= 1) {
+                $poi_count = count($v);
+                if ($poi_count <= 1) {
                     $poi_list = $v;
                 } else {
                     //需要再次排序
@@ -547,9 +572,13 @@ class DigitalLogic extends BaseService
 
                 $list[] = [
                     'poi_name' => isset($category[$k]) ? $category[$k] : '',
-                    'poi_list' => $poi_list
+                    'poi_list' => $poi_list,
+                    'id' => $k,
+                    'count' => $poi_count,
                 ];
             }
+
+            sort_array($list, 'id');
 
         }
 
@@ -631,5 +660,42 @@ class DigitalLogic extends BaseService
         ];
     }
 
+    //数字单线购买方式
+    public function buy_type($channels, $all_param)
+    {
+        $shop = self::shop($all_param);
+        $channel = $shop['channel'];
+        $shop_id = $shop['shop_id'];
+        $appid = $url = $mobile = '';
+
+        if (!isset($all_param['id']) || !isset($all_param['type'])) error(40000, 'id必传');
+        $type = intval($all_param['type']);
+        $id = intval(encrypt($all_param['id'], Status::ENCRYPT_PRODUCT, false));
+        if (empty($id) || empty($type)) error(40000, 'id不正确');
+
+        if($type == Status::SHOP_TYPE_DIGITAL){
+
+            $data = DigitalProductRelation::where('channel', $channel)->where('pid', $id)->find();
+            if (empty($data)) {
+                $tels = Tels::field('citycode,tel')->where(['channel' => $channel, 'objid' => $shop_id, 'type' => 1])->find();
+                if (!empty($tels)) {
+                    $mobile = isMobile($tels['tel']) ? $tels['tel'] : ($tels['citycode'] . '-' . $tels['tel']);
+                }
+            } else {
+                $appid  = $data->appid;
+                $url = $data->url;
+            }
+
+        }
+
+        $list = [
+            'mobile' => $mobile,
+            'appid' => $appid,
+            'url' => $url,
+        ];
+
+        success($list);
+
+    }
 
 }

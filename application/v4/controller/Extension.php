@@ -18,7 +18,8 @@ class Extension extends Base
             'upgrade' => ['type' => 'GET', 'lived' => false],
             'extension' => ['type' => 'GET', 'lived' => false],
             'product' => ['type' => 'GET', 'lived' => false],
-
+            'poster' => ['type' => 'GET', 'lived' => false],
+            'qrcode' => ['type' => 'GET', 'lived' => false],
         ];
     }
 
@@ -58,13 +59,25 @@ class Extension extends Base
     //推广中心
     public function extension()
     {
-        ExtensionLogic::service()->extension($this->channels['channel'], $this->users);
+        ExtensionLogic::service()->upgradeextension($this->channels['channel'], $this->users);
     }
 
     //推广中心
     public function product()
     {
         ExtensionLogic::service()->product($this->channels['channel'], $this->users, $this->all_param);
+    }
+
+    //单产品推广图
+    public function poster()
+    {
+        ExtensionLogic::service()->poster($this->users, $this->all_param);
+    }
+
+    //获取二维码
+    public function qrcode()
+    {
+        ExtensionLogic::service()->qrcode($this->channels['channel'], $this->all_param);
     }
 
 }

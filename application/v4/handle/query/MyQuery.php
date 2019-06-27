@@ -3,8 +3,12 @@
 namespace app\v4\handle\query;
 
 use app\v4\model\Main\Channel;
+use app\v4\model\Shop\DistributionOrder;
+use app\v4\model\Shop\DistributionPromotionConfig;
+use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\Message;
 use app\v4\model\Shop\MessagePrevent;
+use app\v4\model\Shop\Order;
 use app\v4\model\Shop\User;
 use think\Db;
 
@@ -43,6 +47,34 @@ class MyQuery
     {
         return Channel::where('id', $channel)
             ->field('user_cover,extension_status')->find();
+    }
+
+    //获取用户分销记录
+    public function getUserDistribution($channel, $user)
+    {
+        return DistributionOrder::where(['channel' => $channel, 'distribution_user_id' => $user])
+            ->select();
+    }
+
+    //获取用户记录
+    public function getUser($channel, $user)
+    {
+        return DistributionUser::where(['channel' => $channel, 'userid' => $user])
+            ->find();
+    }
+
+    //获取配置记录
+    public function getExtensionConfig($channel)
+    {
+        return DistributionPromotionConfig::where(['channel' => $channel])
+            ->find();
+    }
+
+    //获取用户购买记录
+    public function getUserOrder($channel, $users)
+    {
+        return Order::where(['channel' => $channel, 'uid' => $users, 'status' => 8])
+            ->select();
     }
 
     //获取手机号

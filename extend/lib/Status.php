@@ -134,4 +134,7 @@ class Status
     const SHOP_STATUS_NORMAL        = 1;//店铺正常状态
     const SHOP_STATUS_DELETE        = 0;//店铺删除
 
+    const SHOP_TYPE_ALL             = 1;//默认所有的店铺功能
+    const SHOP_TYPE_DIGITAL         = 2;//数字专线
+
 }

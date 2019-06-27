@@ -32,6 +32,7 @@ class Digital extends Base
             'type_list' => ['type' => 'GET', 'lived' => false],//数字单线分类
             'commend_list' => ['type' => 'GET', 'lived' => false],//数字单线首页四美推荐
             'poi_list' => ['type' => 'GET', 'lived' => false],//数字单线四美列表
+            'buy_type' => ['type' => 'GET', 'lived' => false],//数字单线购买方式
         ];
     }
 
@@ -117,6 +118,12 @@ class Digital extends Base
     public function poi_list()
     {
         DigitalLogic::service()->poi_list($this->channels, $this->all_param); //,$this->users
+    }
+
+    //数字单线购买方式
+    public function buy_type()
+    {
+        DigitalLogic::service()->buy_type($this->channels, $this->all_param); //,$this->users
     }
 
 }

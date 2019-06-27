@@ -3,3 +3,4 @@ shop.code-workspace
 .idea
 *.log
 thinkphp
+/vendor
