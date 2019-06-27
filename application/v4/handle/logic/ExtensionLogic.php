@@ -314,7 +314,11 @@ class ExtensionLogic extends BaseService
         //获取商品海报
         $productInfo = DistributionProduct::field('poster')->where(['id' => $productId])->find();
         if (!empty($productInfo['poster'])) {
-            $result['poster'] = json_decode($productInfo['poster'], true);
+            $posters = json_decode($productInfo['poster'], true);
+            foreach ($posters as $v) {
+                $result['poster'][] = getBucket('distribution_product', 'poster', $v);
+            }
+
         } else {
             error(50000, '该商品未设置海报!');
         }

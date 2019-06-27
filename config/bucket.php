@@ -17,14 +17,17 @@ return [
         'cover' => 'article-pic',
         'images' => 'article-pic',
     ],
-    'digital_line'=>[
-        'line_cover'=>'article-pic',
-        'cover'=>'article-pic',
+    'digital_line' => [
+        'line_cover' => 'article-pic',
+        'cover' => 'article-pic',
     ],
     "product" => [
         'pic' => 'product-pic',
     ],
     "channel" => [
         'user_cover' => 'shop-pic',
+    ],
+    "distribution_product" => [
+        'poster' => 'article-pic',
     ]
 ];
