@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+namespace think;
+
+
+//环境参数 1线上2测试3本地
+define('APP_EVN', isset($argv[2]) ? $argv[2] : 3);
+define('DOMAIN',   APP_EVN == 1 ? 'http://api-shop.feekr.com' : (APP_EVN == 2 ? 'http://tst-api-shop.feekr.com' : 'http://api-shop.f.com')  );//本站url
+define('PROGARM_ROOT', dirname(dirname(__FILE__))); // program root
+define('REDIS_SYS', APP_EVN == 1 ? 'o' : (APP_EVN == 2 ? 't' : 'l')); // redis线上/测试/本地前缀标识
+define('REDIS_FB', 'f'); // redis前台/后台前缀标识
+define('NOW', time()); // define a global timestamp
+// 加载基础文件
+require __DIR__ . '/thinkphp/base.php';
+
+// 应用初始化
+Container::get('app')->path(__DIR__ . '/application/')->initialize();
+
+// 控制台初始化
+Console::init();

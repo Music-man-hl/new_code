@@ -1,0 +1,5 @@
+.env
+shop.code-workspace
+.idea
+*.log
+thinkphp

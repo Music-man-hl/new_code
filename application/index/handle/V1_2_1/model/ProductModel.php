@@ -1,0 +1,144 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: 83876
+ * Date: 2018/5/16
+ * Time: 15:23
+ */
+
+namespace app\index\handle\V1_2_1\model;
+
+use think\Db;
+use lib\Error;
+use lib\Log;
+
+class ProductModel
+{
+
+    const STATUS_OK  = 1;//上线  房型状态
+    const STATUS_NO  = 0;//下线
+    const STATUS_DEL = 3;//删除
+
+    const STATUS_SALE_OK = 1;//房态开
+    const STATUS_SALE_NO = 0;//房态关
+
+    //获取房型
+    function findHotelRoomType($id){
+        return Db::name('hotel_room_type')->where('id',$id)->where('status','<>',self::STATUS_DEL)->find();
+    }
+    //获取所有的床型
+    function getAllBedType(){
+        return Db::name('hotel_bed_type')->select();
+    }
+
+    //获取酒店id
+    function getHotelId($channel,$shop_id){
+        $data =  Db::name('hotel')->field('id')->where(makeWhere(['channel'=>$channel,'shop_id'=>$shop_id]))->find();
+        return empty($data) ? 0 : $data['id'];
+    }
+
+
+    //获取门店
+    function getShopIdAndName($channel,$ids){
+        return Db::name('shop')->field('id,name')->where(['status'=>1,'channel'=>$channel,'id'=>$ids])->select();
+    }
+
+    //获取房型信息
+    function getRoomInfoById($id){
+        $sql    = 'SELECT r.*,s.`name` as shop_name FROM hotel_room_type r 
+                   LEFT JOIN shop s on s.`id`=r.`shop_id`
+                   WHERE r.`id`=:id AND r.`status`=:status';
+        $param  = array('id'=>$id,'status'=>self::STATUS_OK);
+
+        return Db::query($sql,$param);
+
+    }
+
+    //获取房型图片
+    function getRoomPicture($room_type_id){
+        return Db::name('room_picture')->where('room_type_id',$room_type_id)->order('seq')->field('pic,bucket')->select();
+    }
+
+    //获取床型
+    function getBedType(){
+        return Db::name('hotel_bed_type')->select();
+    }
+
+    //获取房型平均价格
+    function getListsPrice($room,$sTime,$eTime)
+    {
+        $sql = 'SELECT `room`,AVG(`sale_price`) as price,SUM(`allot`) as num FROM hotel_booking WHERE `room` IN('.$room.') AND `date`>=:stime AND `date`<:etime GROUP BY `room`';
+        $param = ['stime'=>$sTime,'etime'=>$eTime];
+
+        return Db::query($sql,$param);
+    }
+
+    //获取订单中未支付的房型
+    function orderRoom($room,$sTime,$eTime)
+    {
+        $sql = 'SELECT `room_num`,`checkin`,`checkout`,`room_id` FROM order_hotel_calendar WHERE `room_id` IN('.$room.')  AND ((`checkin`>=:stime AND `checkout`<:etime) OR (`checkin`<=:stime1 AND `checkout`>:stime11 AND `checkout`<:etime111) OR (`checkin`<=:etime2 AND `checkout`>:etime22 AND `checkin`>=:stime222) OR (`checkin`<:stime3 AND `checkout`>:etime3)) AND `order_status`=2 AND `create`>=:time';
+        $param = ['stime'=>$sTime,'etime'=>$eTime,'stime1'=>$sTime,'stime11'=>$sTime,'etime2'=>$eTime,'etime22'=>$eTime,'stime3'=>$sTime,'etime3'=>$eTime,'etime111'=>$eTime,'stime222'=>$sTime,'time'=>NOW-60*30];
+        return Db::query($sql,$param);
+    }
+
+
+    //获取状态异常房型
+    function getListsStat($room,$sTime,$eTime,$inLists)
+    {
+        $sql = 'SELECT `room`,`allot`,`status`,`used`,`date` FROM hotel_booking b
+                WHERE `room` IN('.$room.') AND `date`>=:stime AND `date`<:etime AND (`status`=0 or (`allot`-`used`)=0 OR `allot`=0  '.$inLists.')';
+        $param = ['stime'=>$sTime,'etime'=>$eTime];
+        return Db::query($sql,$param);
+    }
+    //获取列表
+    function getLists($channel,$sub_shop,$checkin,$checkout,$page,$count){
+       return Db::name('hotel_room_type')
+                ->field('id,name,feature,bucket,cover,min_limit,max_limit')
+                ->where([ 'channel'=>$channel,'shop_id'=>$sub_shop,'status'=>[self::STATUS_OK] ])
+                ->where('start','<=',$checkin)
+                ->where('end','>=',$checkout)
+                ->order('update_time desc')
+                ->limit($page,$count)
+                ->select();
+    }
+
+
+    //没有checkin的情况下，获取列表
+    function getListsNoCheck($channel,$sub_shop,$page,$count)
+    {
+        return Db::name('hotel_room_type')
+            ->field('id,name,feature,bucket,cover,default_price as price,status,min_limit,max_limit')
+            ->where([ 'channel'=>$channel,'shop_id'=>$sub_shop,'status'=>[self::STATUS_OK] ])
+            ->order('update_time desc')
+            ->limit($page,$count)
+            ->select();
+    }
+
+
+    function getListsCount($channel,$sub_shop,$checkin,$checkout)
+    {
+        return Db::name('hotel_room_type')
+            ->field('id,name,feature,bucket,cover')
+            ->where([ 'channel'=>$channel,'shop_id'=>$sub_shop,'status'=>[self::STATUS_OK] ])
+            ->where('start','<=',$checkin)
+            ->where('end','>',$checkout)
+            ->order('update_time desc')
+            ->count();
+    }
+
+    //获取预约日历
+    function getHotelBooking($channel,$room,$start=0,$end=0) {
+
+        $where = [
+            ['channel','=',$channel],
+            ['room','=',$room],
+            ['date','>=',$start],
+            ['date','<=',$end],
+        ];
+
+        return Db::name('hotel_booking')->field('date,price,sale_price,allot,used,status')->where($where)->select();
+
+    }
+
+
+}
