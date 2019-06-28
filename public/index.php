@@ -13,7 +13,7 @@
 namespace think;
 
 //环境参数 1线上2测试3本地
-define('APP_EVN', $_SERVER['HTTP_HOST'] == 'api-shop.feekr.com' ? 1 : ($_SERVER['HTTP_HOST'] == 'api-shop.f.com' ? 3 : 2));
+define('APP_EVN', $_SERVER['HTTP_HOST'] == 'api-shop.feekr.com' ? 1 : ($_SERVER['HTTP_HOST'] == 'tst-api-shop.feekr.com' ? 2 : 2));
 define('DOMAIN', APP_EVN == 1 ? 'https://api-shop.feekr.com' : (APP_EVN == 2 ? 'https://tst-api-shop.feekr.com' : 'http://api-shop.f.com'));//本站url
 define('DOMAIN_MP', APP_EVN == 1 ? 'https://api-mp.feekr.com' : (APP_EVN == 2 ? 'https://tst-api-mp.feekr.com' : 'http://api-mp.f.com'));//后台接口
 define('PROGARM_ROOT', dirname(dirname(__FILE__))); // program root

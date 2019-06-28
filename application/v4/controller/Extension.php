@@ -24,7 +24,7 @@ class Extension extends Base
         ];
     }
 
-    //产品列表
+
     public function commission()
     {
 
@@ -32,10 +32,17 @@ class Extension extends Base
 
     }
 
-    //产品详情
+
     public function withdraw()
     {
         return ExtensionLogic::service()->withdraw();
+
+    }
+
+    //是否能推广产品
+    public function product_can()
+    {
+        return ExtensionLogic::service()->product_can($this->users);
 
     }
 

@@ -91,6 +91,20 @@ class ExtensionLogic extends BaseService
         return success();
     }
 
+    public function product_can($user)
+    {
+        $productId = encrypt(Request::param('product_id'), 1, false);
+        $productType = Request::param('product_type');
+        $dp = DistributionProduct::where('id', $productId)->where('type', $productType)->find();
+        $user = DistributionUser::where('userid', $user['id'])->where('status', DistributionUser::AVAILABLE_STATUS)->find();
+        if ($dp && $user) {
+            $can = 1;
+        } else {
+            $can = 0;
+        }
+        return success(['can' => $can, 'icon' => 'https://article-pic.feekr.com/pic/icon/earn.png']);
+    }
+
     public function sendMq($order)
     {
         $orderModel = Order::where('order', $order)->find();
