@@ -22,6 +22,7 @@ class My extends Base
             'login_code' => ['type' => 'POST', 'lived' => true],
             'img_captcha' => ['type' => 'GET', 'lived' => false],
             'info_config' => ['type' => 'GET', 'lived' => false],
+            'bind_wx_mobile' => ['type' => 'POST', 'lived' => true],
         ];
     }
 
@@ -30,6 +31,12 @@ class My extends Base
     public function bind_mobile()
     {
         MyLogic::service()->bind_mobile($this->channels, $this->all_param, $this->users);
+    }
+
+    //绑定微信手机号
+    public function bind_wx_mobile()
+    {
+        MyLogic::service()->bind_wx_mobile($this->channels, $this->all_param, $this->users);
     }
 
     //门店详情
