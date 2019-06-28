@@ -277,6 +277,7 @@ class ExtensionLogic extends BaseService
         $userInfo = DistributionUser::field('userid,level')->where(['userid' => $userId])->find();
         $userLevel = $userInfo['level'] ?? 1;
         foreach ($product as $key => $value) {
+            $product[$key]['id'] = encrypt($value['id'],1);
             $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
             if ($value['rate_type'] == 1) {//统一比例
                 $product[$key]['rate'] = ($value['rate_all'] ?? 0);
