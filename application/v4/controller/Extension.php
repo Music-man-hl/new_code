@@ -78,7 +78,7 @@ class Extension extends Base
     //获取二维码
     public function qrcode()
     {
-        ExtensionLogic::service()->qrcode($this->channels['channel'], $this->all_param);
+        ExtensionLogic::service()->qrcode($this->channels['channel'], $this->all_param, $this->users);
     }
 
     //获取招募页规则
