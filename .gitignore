@@ -5,3 +5,4 @@ shop.code-workspace
 thinkphp
 /vendor
 /runtime/
+/.DS_Store

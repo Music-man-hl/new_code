@@ -13,5 +13,9 @@ use app\v4\model\BaseModel;
 
 class User extends BaseModel
 {
+    public function getCoverAttr($value, $data)
+    {
+        return picture($data['bucket'], $data['pic']);
+    }
 
 }

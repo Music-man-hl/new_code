@@ -878,3 +878,24 @@ if(!function_exists('add')){
         });
     }
 }
+
+
+if (!function_exists('getBucket')) {
+    /**
+     * 根据表名跟字段返回完整图片url
+     * @param  string|$tableName 表名
+     * @param  string|$field 字段名
+     * @param  string|$data 图片路径后缀
+     * @return $this
+     */
+    function getBucket($tableName, $field, $data = '')
+    {
+        $bucket = config("bucket.$tableName.$field");
+        $domain = config("upyun.$bucket.domain");
+        if ($data) {
+            return $domain . $data;
+        } else {
+            return $domain;
+        }
+    }
+}
