@@ -309,7 +309,7 @@ class ExtensionLogic extends BaseService
         if (!isset($params['product_id'])) {
             error(40000, "product_id");
         }
-        $productId = $params['product_id'];
+        $productId = encrypt($params['product_id'], 1, false);
         //获取用户等级等信息
         $userInfo = DistributionUser::field('nickname,avatar')
             ->where(['userid' => $userId])
