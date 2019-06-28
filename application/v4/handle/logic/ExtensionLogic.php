@@ -102,7 +102,11 @@ class ExtensionLogic extends BaseService
         } else {
             $can = 0;
         }
-        return success(['can' => $can, 'icon' => 'https://article-pic.feekr.com/pic/icon/earn.png']);
+        return success([
+            'can' => $can,
+            'icon' => 'https://article-pic.feekr.com/pic/icon/earn.png',
+            'poster' => DistributionProduct::DEFAULT_POSTER
+        ]);
     }
 
     public function sendMq($order)

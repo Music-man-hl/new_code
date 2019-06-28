@@ -8,5 +8,5 @@ use app\v4\model\BaseModel;
 
 class DistributionProduct extends BaseModel
 {
-
+    const DEFAULT_POSTER = '';
 }
