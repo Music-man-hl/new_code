@@ -291,6 +291,7 @@ class ExtensionLogic extends BaseService
         $userInfo = DistributionUser::field('userid,level')->where(['userid' => $userId])->find();
         $userLevel = $userInfo['level'] ?? 1;
         foreach ($product as $key => $value) {
+            $product[$key]['id'] = encrypt($value['id'], 1);
             $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
             if ($value['rate_type'] == 1) {//统一比例
                 $product[$key]['rate'] = ($value['rate_all'] ?? 0);
@@ -322,7 +323,7 @@ class ExtensionLogic extends BaseService
         if (!isset($params['product_id'])) {
             error(40000, "product_id");
         }
-        $productId = $params['product_id'];
+        $productId = encrypt($params['product_id'], 1, false);
         //获取用户等级等信息
         $userInfo = DistributionUser::field('nickname,avatar')
             ->where(['userid' => $userId])
@@ -359,6 +360,9 @@ class ExtensionLogic extends BaseService
             $app_url .= "?product_id=$productId&sub_shop_id=$shopId&uid=$user";
         }
         $api = DOMAIN_MP . "/link/front_qrcode?api_version=$app_version&channel=$channel&app_url=$app_url";
+        if (isset($params['is_hyaline'])) {
+            $api .= "is_hyaline=1";
+        }
         $res = curl_file_get_contents($api);
         print_r($res);
         die;
