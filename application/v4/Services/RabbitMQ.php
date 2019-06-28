@@ -11,6 +11,7 @@ namespace app\v4\Services;
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 class RabbitMQ extends BaseService
 {
@@ -30,6 +31,7 @@ class RabbitMQ extends BaseService
     public function publish($str, $exchange, $routingKey)
     {
         $message = new AMQPMessage($str, ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]);
+        $message->set("application_headers", new AMQPTable(["Content-Type"=>"application/json"]));
         $this->channel->basic_qos(null, 1, null);
         return $this->channel->basic_publish($message, $exchange, $routingKey);
     }
