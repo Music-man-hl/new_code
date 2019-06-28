@@ -7,8 +7,7 @@ use app\v4\Services\BaseService;
 use lib\SmsSend;
 use lib\ValidPic;
 use lib\ValidSMS;
-use third\WXBizDataCrypt;
-use third\WxBizMsgCrypt;
+use third\WxBizDataCrypt;
 
 /**
  * Created by PhpStorm.
@@ -74,7 +73,7 @@ class MyLogic extends BaseService
 
         $wxData = '';
         //获取解密信息
-        $pc = new WXBizDataCrypt($appid, $sessionData['session_key']);
+        $pc = new WxBizDataCrypt($appid, $sessionData['session_key']);
         $errCode = $pc->decryptData($params['encryptedData'], $params['iv'], $wxData);
         if ($errCode) error(50000, '数据解密错误');
         $wxData = filterEmoji($wxData);
