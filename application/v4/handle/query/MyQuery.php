@@ -3,6 +3,7 @@
 namespace app\v4\handle\query;
 
 use app\v4\model\Main\Channel;
+use app\v4\model\Main\ChannelInfo;
 use app\v4\model\Shop\DistributionOrder;
 use app\v4\model\Shop\DistributionPromotionConfig;
 use app\v4\model\Shop\DistributionUser;
@@ -40,6 +41,14 @@ class MyQuery
     {
         return User::where('channel', $channel)->where('id', $user)
             ->field('mobile')->find();
+    }
+
+    // 获取授权信息
+    public function getChannelInfoAndThirdUser($id, $type)
+    {
+        return ChannelInfo::where('id', $id)->with(['thirdUser' => function ($query) use ($type) {
+            $query->where('type', $type)->field('appid,channel');
+        }])->find();
     }
 
     //获取店铺信息
