@@ -20,6 +20,7 @@ class Extension extends Base
             'product' => ['type' => 'GET', 'lived' => false],
             'poster' => ['type' => 'GET', 'lived' => false],
             'qrcode' => ['type' => 'GET', 'lived' => false],
+            'recruit' => ['type' => 'GET', 'lived' => false],
         ];
     }
 
@@ -78,6 +79,12 @@ class Extension extends Base
     public function qrcode()
     {
         ExtensionLogic::service()->qrcode($this->channels['channel'], $this->all_param);
+    }
+
+    //获取招募页规则
+    public function recruit()
+    {
+        ExtensionLogic::service()->recruit($this->channels['channel']);
     }
 
 }

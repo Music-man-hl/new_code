@@ -8,6 +8,7 @@ use app\v4\model\Shop\DistributionOrder;
 use app\v4\model\Shop\DistributionProduct;
 use app\v4\model\Shop\DistributionPromotionConfig;
 use app\v4\model\Shop\DistributionQuestion;
+use app\v4\model\Shop\DistributionRecruitPage;
 use app\v4\model\Shop\DistributionUpgradeCondition;
 use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\DistributionUserApply;
@@ -139,6 +140,8 @@ class ExtensionLogic extends BaseService
     //申请成为推广员
     public function promotion($userId, $fromId, $channel, $isReview)
     {
+        //判断用户是否已经是推广员
+
         //获取用户信息并加入申请表中
         $userInfo = User::alias('u')
             ->field('u.mobile,u.nickname,i.headimgurl,i.openid')
@@ -339,6 +342,13 @@ class ExtensionLogic extends BaseService
         $res = curl_file_get_contents($api);
         print_r($res);
         die;
+    }
+
+    //获取招募页规则
+    public function recruit($channel)
+    {
+        $config = DistributionRecruitPage::field("title, content")->where(['channel' => $channel])->find();
+        success($config);
     }
 }
 
