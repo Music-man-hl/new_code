@@ -250,22 +250,20 @@ class RoomLogic extends BaseService
             ->where('status', HotelBooking::STATUS_OPEN)
             ->order('date');
 
-        if (isset($allParam['page'])) {
-            $page = startLimit($allParam);
-            $limit = $page['start'];
-            $length = $page['limit'] - 1;
+        $page = startLimit($allParam);
+        $limit = $page['start'];
+        $length = $page['limit'] - 1;
 
-            if (isset($allParam['checkin']) && isset($allParam['checkout'])) {
-                $startTime = strtotime($allParam['checkin']);
-                $endTime = strtotime($allParam['checkout']);
-            } else {
-                $startTime = strtotime(date('Y-m-01', strtotime("+ $limit  month", $min)));
-                $endTime = strtotime(date('Y-m-t', strtotime("+ $length month", $startTime)));
-            }
-            $query->where('date', '>=', $startTime);
-            $query->where('date', '<=', $endTime);
-            $total_count = ((date('Y', $max) - date('Y', $min)) * 12 + date('m', $max) - date('m', $min) + 1);
+        if (isset($allParam['checkin']) && isset($allParam['checkout'])) {
+            $startTime = strtotime($allParam['checkin']);
+            $endTime = strtotime($allParam['checkout']);
+        } else {
+            $startTime = strtotime(date('Y-m-01', strtotime("+ $limit  month", $min)));
+            $endTime = strtotime(date('Y-m-t', strtotime("+ $length month", $startTime)));
         }
+        $query->where('date', '>=', $startTime);
+        $query->where('date', '<=', $endTime);
+        $total_count = ((date('Y', $max) - date('Y', $min)) * 12 + date('m', $max) - date('m', $min) + 1);
 
         $booking = $query->select()->hidden(['sale_price', 'allot', 'used'])->append(['price', 'stock'])->toArray();
         $roomName = $room['name'];
