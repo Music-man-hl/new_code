@@ -19,6 +19,7 @@ class Poi extends Base
         return [
             'lists' => ['type' => 'GET', 'lived' => false],//poi列表
             'catalog' => ['type' => 'GET', 'lived' => false],//poi目录
+            'article_list' => ['type' => 'GET', 'lived' => false],//文章目录
         ];
     }
 
@@ -33,5 +34,12 @@ class Poi extends Base
     {
         PoiLogic::service()->catalog($this->channels, $this->all_param); //,$this->users
     }
+
+    // poi目录
+    public function article_list()
+    {
+        PoiLogic::service()->article_list($this->channels, $this->all_param); //,$this->users
+    }
+
 
 }

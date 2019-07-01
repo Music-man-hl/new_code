@@ -9,6 +9,7 @@
 namespace app\v4\handle\logic;
 
 use app\v4\model\Main\Shop;
+use app\v4\model\Shop\InformationArticle;
 use app\v4\model\Shop\PoiArticle;
 use app\v4\model\Shop\PoiArticleTag;
 use app\v4\model\Shop\PoiCategory;
@@ -21,6 +22,7 @@ class PoiLogic extends BaseService
 {
 
     const POI_STATUS_OK = 1;//POI状态ok
+    const ARTICLE_STATUS_OK = 1;//资讯状态ok
 
 //    poi列表
     public function lists($channels, $all_param)
@@ -96,6 +98,35 @@ FROM `{$table}` WHERE `status`=:status AND `category`=:category ORDER BY distanc
 
         success(['list' => $category]);
 
+    }
+
+    //文章列表
+    public function article_list($channels, $all_param){
+        $shop = self::shop($all_param);
+        $shop_id = $shop['shop_id'];
+        $channel = $shop['channel'];
+        $limit = startLimit($all_param);
+
+        $getData = InformationArticle::where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::ARTICLE_STATUS_OK);
+
+        $total_count = $getData->count();//拉取数量
+
+        $getData = $getData->field('id,create_time,cover,title')->order('create_time desc')
+            ->limit($limit['start'], $limit['limit'])->select()->toArray();  //获取总数据
+
+        $list = [];
+        if (!empty($getData)) {
+            foreach ($getData as $v) {
+                $list[] = [
+                    'id' => encrypt($v['id'], Status::ENCRYPT_ARTICLE),
+                    'title' => $v['title'],
+                    'add_time' => $v['create_time'],
+                    'cover' => getBucket('information_article', 'cover', $v['cover']),
+                ];
+            }
+        }
+
+        success(['list' => $list, 'total_count' => (int)$total_count]);
     }
 
 }
