@@ -281,13 +281,13 @@ class ExtensionLogic extends BaseService
     {
         $page = $params['page'] ?? 1;
         $product = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+            ->field('p.id,p.name,p.shop_id as sub_shop_ip,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
             ->where(['dp.channel' => $channel, 'dp.status' => 1])
             ->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
         $count = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+            ->field('p.id,p.name,p.shop_id as sub_shop_ip,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
             ->where(['dp.channel' => $channel, 'dp.status' => 1])
             ->count();
@@ -296,6 +296,7 @@ class ExtensionLogic extends BaseService
         $userLevel = $userInfo['level'] ?? 1;
         foreach ($product as $key => $value) {
             $product[$key]['id'] = encrypt($value['id'], 1);
+            $product[$key]['sub_shop_ip'] = encrypt($value['sub_shop_ip'], 4);
             $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
             if ($value['rate_type'] == 1) {//统一比例
                 $product[$key]['rate'] = ($value['rate_all'] ?? 0);
