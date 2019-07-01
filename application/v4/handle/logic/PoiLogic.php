@@ -29,6 +29,7 @@ class PoiLogic extends BaseService
     {
         $shop = self::shop($all_param);
         $shop_id = $shop['shop_id'];
+        $channel = $shop['channel'];
         $limit = startLimit($all_param);
 
         $id = isset($all_param['id']) ? intval($all_param['id']) : 0;
@@ -43,12 +44,14 @@ class PoiLogic extends BaseService
         $db = Db::connect(PoiArticle::getConfig());
         $table = PoiArticle::getTable();
 
-        $total_count = PoiArticle::where('status', self::POI_STATUS_OK)->where('category', $id)->count();
+        $total_count = PoiArticle::where('channel',$channel)->where('shop_id',$shop_id)->where('status', self::POI_STATUS_OK)->where('category', $id)->count();
         $sql = "SELECT `id`,`name`,`intro`,`cover`,`lat`,`lng`,ROUND(6378.138*2*ASIN(SQRT(POW(SIN(({$lat}*PI()/180-lat*PI()/180)/2),2)+
 COS({$lat}*PI()/180)*COS(lat*PI()/180)*POW(SIN(({$lng}*PI()/180-lng*PI()/180)/2),2)))*1000) AS distance 
-FROM `{$table}` WHERE `status`=:status AND `category`=:category ORDER BY distance Asc LIMIT :start,:limit";
+FROM `{$table}` WHERE `channel`=:channel AND `shop_id`=:shop_id AND `status`=:status AND `category`=:category ORDER BY distance Asc LIMIT :start,:limit";
 
         $param = [
+            'channel'=>$channel,
+            'shop_id'=>$shop_id,
             'status' => self::POI_STATUS_OK,
             'category' => $id,
             'start' => $limit['start'],
