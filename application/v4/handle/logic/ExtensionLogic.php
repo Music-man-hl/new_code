@@ -366,7 +366,7 @@ class ExtensionLogic extends BaseService
         }*/
         $api = DOMAIN_MP . "/link/front_qrcode?api_version=$app_version&channel=$channel&app_url=$app_url";
         if (isset($params['is_hyaline'])) {
-            $api .= "is_hyaline=1";
+            $api .= "&is_hyaline=1";
         }
         $res = curl_file_get_contents($api);
         print_r($res);
