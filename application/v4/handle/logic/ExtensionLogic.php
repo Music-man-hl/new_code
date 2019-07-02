@@ -160,12 +160,12 @@ class ExtensionLogic extends BaseService
     public function promotion($userId, $fromId, $channel, $isReview)
     {
         //判断用户是否已经是推广员
-        $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find();
+        $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find()->toArray();
         if (count($checkUser) > 0) {
             error(['type' => 4, 'msg' => "用户已经是推广员"]);
         }
         //判断用户是否已报过名
-        $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId])->find();
+        $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId])->find()->toArray();
         if (count($checkUser) > 0) {
             error(['type' => 5, 'msg' => "用户已经报名"]);
         }
