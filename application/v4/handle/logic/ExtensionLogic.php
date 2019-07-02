@@ -162,12 +162,12 @@ class ExtensionLogic extends BaseService
         //判断用户是否已经是推广员
         $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find();
         if ($checkUser) {
-            error(['type' => 4, 'msg' => "用户已经是推广员"]);
+            success(['type' => 4, 'msg' => "用户已经是推广员"]);
         }
         //判断用户是否已报过名
         $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId])->find();
         if ($checkUser) {
-            error(['type' => 5, 'msg' => "用户已经报名"]);
+            success(['type' => 5, 'msg' => "用户已经报名"]);
         }
         //获取用户信息并加入申请表中
         $userInfo = User::alias('u')
@@ -208,7 +208,7 @@ class ExtensionLogic extends BaseService
                 curl_file_get_contents($url, $data);
                 success(['type' => 1, 'msg' => "成功成为推广员"]);
             } else {
-                error(['type' => 3, 'msg' => "写入用户失败"]);
+                success(['type' => 3, 'msg' => "写入用户失败"]);
             }
         } else {
             //审核
@@ -218,7 +218,7 @@ class ExtensionLogic extends BaseService
             if ($res) {
                 success(['type' => 2, 'msg' => "报名成功，请等待审核"]);
             } else {
-                error(['type' => 3, 'msg' => "写入用户失败"]);
+                success(['type' => 3, 'msg' => "写入用户失败"]);
             }
         }
 
