@@ -96,7 +96,7 @@ class ExtensionLogic extends BaseService
         $productId = encrypt(Request::param('product_id'), 1, false);
         $productType = Request::param('product_type');
         $dp = DistributionProduct::where('id', $productId)->where('type', $productType)->find();
-        $userInfo = DistributionUser::where('userid', $user['id'])->where('status', DistributionUser::AVAILABLE_STATUS)->find();
+        $userInfo = DistributionUser::where('userid', $user)->where('status', DistributionUser::AVAILABLE_STATUS)->find();
         if ($dp && $userInfo) {
             $can = 1;
         } else {
