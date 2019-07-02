@@ -359,11 +359,11 @@ class ExtensionLogic extends BaseService
         $app_version = Env::get("MP_APP_VERSION");
         $app_url = $params['app_url'];
         //判断是获取小程序二维码还是产品二维码
-        if (isset($params['product_id']) && !empty($params['product_id'])) {
+        /*if (isset($params['product_id']) && !empty($params['product_id'])) {
             $productId = $params['product_id'];
             $shopId = $params['sub_shop_id'];
             $app_url .= "?product_id=$productId&sub_shop_id=$shopId&uid=$user";
-        }
+        }*/
         $api = DOMAIN_MP . "/link/front_qrcode?api_version=$app_version&channel=$channel&app_url=$app_url";
         if (isset($params['is_hyaline'])) {
             $api .= "is_hyaline=1";
