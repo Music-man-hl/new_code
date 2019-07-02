@@ -1,0 +1,8 @@
+.env
+shop.code-workspace
+.idea
+*.log
+thinkphp
+/vendor
+/runtime/
+/.DS_Store
