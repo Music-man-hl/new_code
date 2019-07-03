@@ -165,7 +165,7 @@ class ExtensionLogic extends BaseService
             success(['type' => 4, 'msg' => "用户已经是推广员"]);
         }
         //判断用户是否已报过名
-        $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId])->find();
+        $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId, 'status' => 1])->find();
         if ($checkUser) {
             success(['type' => 5, 'msg' => "用户已经报名"]);
         }
