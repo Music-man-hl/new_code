@@ -141,7 +141,7 @@ class ExtensionLogic extends BaseService
         if ($ex_status == 2) {
             error(50000, "商家关闭了分销功能,请联系商家！");
         }
-        
+
         $shopConfig = DistributionPromotionConfig::field('id,channel,is_apply,is_condition,is_review,is_notice,level_up_node')->where(['channel' => $channel])->find();
         //判断是否允许加入
         if ($shopConfig['is_apply'] == 2) {
@@ -197,11 +197,12 @@ class ExtensionLogic extends BaseService
             //不审核
             $user = $userApply;
             $userApply['status'] = 2;
-            //写入申请表
-            DistributionUserApply::create($userApply);
+            //不审核则不需要写入申请表
+            //DistributionUserApply::create($userApply);
             //查找下一级的升级条件
             $nextLevel = $this->getNextLevel($channel, 1);
-
+            $user['status'] = 1;
+            $user['level'] = DistributionUpgradeCondition::field('min(level) as level')->where(['channel' => $channel])->find()['level'];
             if ($nextLevel) {
                 $user['next_level_order'] = $nextLevel[0]['order_num'];
                 $user['next_level_money'] = $nextLevel[0]['money'];
