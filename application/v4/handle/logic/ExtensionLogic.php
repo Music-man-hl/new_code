@@ -96,7 +96,7 @@ class ExtensionLogic extends BaseService
         $productId = encrypt(Request::param('product_id'), 1, false);
         $productType = Request::param('product_type');
         $dp = DistributionProduct::where('id', $productId)->where('type', $productType)
-            ->where('status',DistributionProduct::AVAILABLE_STATUS)->find();
+            ->where('status', DistributionProduct::AVAILABLE_STATUS)->find();
         $userInfo = DistributionUser::where('userid', $user)->where('status', DistributionUser::AVAILABLE_STATUS)->find();
         if ($dp && $userInfo) {
             $can = 1;
@@ -160,7 +160,15 @@ class ExtensionLogic extends BaseService
     public function promotion($userId, $fromId, $channel, $isReview)
     {
         //判断用户是否已经是推广员
-
+        $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find();
+        if ($checkUser) {
+            success(['type' => 4, 'msg' => "用户已经是推广员"]);
+        }
+        //判断用户是否已报过名
+        $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId])->find();
+        if ($checkUser) {
+            success(['type' => 5, 'msg' => "用户已经报名"]);
+        }
         //获取用户信息并加入申请表中
         $userInfo = User::alias('u')
             ->field('u.mobile,u.nickname,i.headimgurl,i.openid')
@@ -200,7 +208,7 @@ class ExtensionLogic extends BaseService
                 curl_file_get_contents($url, $data);
                 success(['type' => 1, 'msg' => "成功成为推广员"]);
             } else {
-                error(['type' => 3, 'msg' => "写入用户失败"]);
+                success(['type' => 3, 'msg' => "写入用户失败"]);
             }
         } else {
             //审核
@@ -210,7 +218,7 @@ class ExtensionLogic extends BaseService
             if ($res) {
                 success(['type' => 2, 'msg' => "报名成功，请等待审核"]);
             } else {
-                error(['type' => 3, 'msg' => "写入用户失败"]);
+                success(['type' => 3, 'msg' => "写入用户失败"]);
             }
         }
 
