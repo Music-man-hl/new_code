@@ -4,6 +4,7 @@
 namespace app\v4\handle\logic;
 
 
+use app\v4\model\Main\Channel;
 use app\v4\model\Shop\DistributionOrder;
 use app\v4\model\Shop\DistributionProduct;
 use app\v4\model\Shop\DistributionPromotionConfig;
@@ -134,6 +135,13 @@ class ExtensionLogic extends BaseService
         }
         $fromId = $params['from_id'];
         //根据当前用户配置判断
+        //判断是否开启分销
+        $channelInfo = Channel::field('extension_status')->where(['id' => $channel])->find();
+        $ex_status = $channelInfo['extension_status'];
+        if ($ex_status == 2) {
+            error(50000, "商家关闭了分销功能,请联系商家！");
+        }
+        
         $shopConfig = DistributionPromotionConfig::field('id,channel,is_apply,is_condition,is_review,is_notice,level_up_node')->where(['channel' => $channel])->find();
         //判断是否允许加入
         if ($shopConfig['is_apply'] == 2) {
