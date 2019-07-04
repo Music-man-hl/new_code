@@ -13,6 +13,7 @@ use app\v4\model\Shop\DistributionRecruitPage;
 use app\v4\model\Shop\DistributionUpgradeCondition;
 use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\DistributionUserApply;
+use app\v4\model\Shop\DistributionWithdrawHistory;
 use app\v4\model\Shop\Order;
 use app\v4\model\Shop\ProductUnion;
 use app\v4\model\Shop\User;
@@ -82,12 +83,14 @@ class ExtensionLogic extends BaseService
         if (!$openId) {
             return error(50000, '未找到OpenId');
         }
-        $result = EasyWeChat::service()->transferToBalance($payee, $amount, '提现', $openId);
-        MyLog::debug('提现信息:金额:' . $amount . 'msg' . json_encode($result));
+
+        $realAmount = $amount * 100;
+        $result = EasyWeChat::service()->transferToBalance($payee, $realAmount, '提现', $openId);
+        MyLog::info('提现信息:金额:' . $amount . 'msg' . json_encode($result));
 
         if (!$result) {
-            //todo
             MyLog::error('提现失败:金额:' . $amount . 'msg' . $result);
+            return error('微信错误,提现失败');
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
@@ -95,6 +98,12 @@ class ExtensionLogic extends BaseService
             $data = json_encode(['userId' => $userId, 'amount' => $amount]);
             MyLog::error('提现保存失败:' . $data);
             return error('50000', '提现保存失败');
+        }
+        $dwh = new DistributionWithdrawHistory;
+        $dwh->user_id = $userId;
+        $dwh->withdraw = $realAmount;
+        if (!$dwh->save()) {
+            MyLog::error('提现记录保存失败:' . json_encode($dwh));
         }
         return success();
     }
