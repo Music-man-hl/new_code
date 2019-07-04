@@ -14,7 +14,6 @@ use app\v4\model\Shop\DistributionUpgradeCondition;
 use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\DistributionUserApply;
 use app\v4\model\Shop\Order;
-use app\v4\model\Shop\Product;
 use app\v4\model\Shop\ProductUnion;
 use app\v4\model\Shop\User;
 use app\v4\model\Shop\UserInfo;
@@ -38,7 +37,7 @@ class ExtensionLogic extends BaseService
             ->with(['orderInfo' => function ($query) {
                 $query->field('product_name,order, date, status');
             }, 'user' => function ($query) {
-                $query->field('id, nickname, pic, bucket');
+                $query->field('id, nickname, pic, bucket')->append(['cover']);
             }])
             ->limit($limit['start'], $limit['limit'])
             ->select();
@@ -107,10 +106,11 @@ class ExtensionLogic extends BaseService
         if ($productType == 1) {
             $productId = encrypt(Request::param('product_id'), 6, false);
         }
+        $isExtension = Channel::where(request()->channel['channelId'])->where('extension_status', 1)->find();
         $dp = DistributionProduct::where('id', $productId)->where('type', $productType)
             ->where('status', DistributionProduct::AVAILABLE_STATUS)->find();
         $userInfo = DistributionUser::where('userid', $user)->where('status', DistributionUser::AVAILABLE_STATUS)->find();
-        if ($dp && $userInfo) {
+        if ($dp && $userInfo && $isExtension) {
             $can = 1;
         } else {
             $can = 0;
