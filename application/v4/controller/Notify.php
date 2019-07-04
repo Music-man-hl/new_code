@@ -67,9 +67,9 @@ class Notify extends Controller
             $data['channel'] = $getChannelId;//真实渠道信息
             $data['version'] = $attach_array[2];//版本
 
-            MyLog::info('微信回调通知开始---');
+            MyLog::info('---微信回调通知开始---');
             PayLogic::service()->notify($data); //微信回调通知
-            MyLog::info('微信回调通知结束---');
+            MyLog::info('---微信回调通知结束---');
             ExtensionLogic::service()->sendMq($attach_array[1]);
         }
 
