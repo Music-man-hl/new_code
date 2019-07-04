@@ -81,7 +81,7 @@ class ExtensionLogic extends BaseService
 
         $openId = UserInfo::where('user', $user)->value('openid');
         $result = EasyWeChat::service()->transferToBalance($payee, $amount, '提现', $openId);
-        MyLog::debug('提现信息:' . $result);
+        MyLog::debug('提现信息:' . json_encode($result));
 
         if (!$result) {
             //todo
