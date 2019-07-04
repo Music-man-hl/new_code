@@ -52,7 +52,7 @@ class ExtensionLogic extends BaseService
             $query->where('status', 8);
         })->where('distribution_user_id', $request->user)
             ->sum('commission');
-        
+
         $withdrawal = DistributionUser::where('userid', $request->user)->value('withdrawal');
 
         $canWithdrawal = $withdrawalSum - $withdrawal;
@@ -81,9 +81,11 @@ class ExtensionLogic extends BaseService
 
         $openId = UserInfo::where('user', $user)->value('openid');
         $result = EasyWeChat::service()->transferToBalance($payee, $amount, '提现', $openId);
+        MyLog::debug('提现信息:' . $result);
 
         if (!$result) {
             //todo
+            MyLog::error('提现失败:' . $result);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
