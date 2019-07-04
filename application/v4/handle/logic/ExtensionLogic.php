@@ -79,7 +79,10 @@ class ExtensionLogic extends BaseService
             return error('40044', '超出可提现金额');
         }
 
-        $openId = UserInfo::where('user', $user)->value('openid');
+        $openId = UserInfo::where('user', $user['userid'])->value('openid');
+        if (!$openId) {
+            return error(50000, '未找到OpenId');
+        }
         $result = EasyWeChat::service()->transferToBalance($payee, $amount, '提现', $openId);
         MyLog::debug('提现信息:' . json_encode($result));
 
