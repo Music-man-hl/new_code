@@ -15,6 +15,7 @@ use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\DistributionUserApply;
 use app\v4\model\Shop\Order;
 use app\v4\model\Shop\Product;
+use app\v4\model\Shop\ProductUnion;
 use app\v4\model\Shop\User;
 use app\v4\model\Shop\UserInfo;
 use app\v4\Services\BaseService;
@@ -162,7 +163,7 @@ class ExtensionLogic extends BaseService
                     $this->promotion($userId, $fromId, $channel, $shopConfig['is_review']);
                     break;
                 } else {
-                    error(41001, "必须购买过商品才能申请成为推广员！");
+                    success(['type' => 6, 'msg' => "必须购买过商品才能申请成为推广员"]);
                 }
         }
     }
@@ -173,7 +174,11 @@ class ExtensionLogic extends BaseService
         //判断用户是否已经是推广员
         $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find();
         if ($checkUser) {
-            success(['type' => 4, 'msg' => "用户已经是推广员"]);
+            if ($checkUser['status'] == 1) {
+                success(['type' => 4, 'msg' => "用户已经是推广员"]);
+            } else {
+                success(['type' => 7, 'msg' => "用户推广员被禁用"]);
+            }
         }
         //判断用户是否已报过名
         $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId, 'status' => 1])->find();
@@ -302,23 +307,31 @@ class ExtensionLogic extends BaseService
     {
         $page = $params['page'] ?? 1;
         $product = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,p.shop_id as sub_shop_id,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
-            ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1])
+            ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+            ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
+            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
             ->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
+
         $count = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,p.shop_id as sub_shop_id,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
-            ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1])
+            ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+            ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
+            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
             ->count();
+
         //获取用户等级信息
         $userInfo = DistributionUser::field('userid,level')->where(['userid' => $userId])->find();
         $userLevel = $userInfo['level'] ?? 1;
         foreach ($product as $key => $value) {
-            $product[$key]['id'] = encrypt($value['id'], 1);
+            //如果是房型产品则需要重新查找数据
             $product[$key]['sub_shop_id'] = encrypt($value['sub_shop_id'], 4);
-            $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
+            if ($value['type'] == 1) {
+                $product[$key]['id'] = encrypt($value['id'], 6);
+                $product[$key]['pic'] = getBucket('hotel_room_type', 'cover', $value['pic']);
+            } else {
+                $product[$key]['id'] = encrypt($value['id'], 1);
+                $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
+            }
             if ($value['rate_type'] == 1) {//统一比例
                 $product[$key]['rate'] = ($value['rate_all'] ?? 0);
                 $product[$key]['predict'] = round($value['price'] * ($value['rate_all'] / 100), 2);
