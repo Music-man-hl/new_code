@@ -52,7 +52,7 @@ class ExtensionLogic extends BaseService
             $query->where('status', 8);
         })->where('distribution_user_id', $request->user)
             ->sum('commission');
-        
+
         $withdrawal = DistributionUser::where('userid', $request->user)->value('withdrawal');
 
         $canWithdrawal = $withdrawalSum - $withdrawal;
@@ -84,6 +84,7 @@ class ExtensionLogic extends BaseService
 
         if (!$result) {
             //todo
+            MyLog::error('提现失败:' . $result);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
