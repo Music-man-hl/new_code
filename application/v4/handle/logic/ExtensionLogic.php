@@ -38,7 +38,7 @@ class ExtensionLogic extends BaseService
             ->with(['orderInfo' => function ($query) {
                 $query->field('product_name,order, date, status');
             }, 'user' => function ($query) {
-                $query->field('id, nickname, pic, bucket');
+                $query->field('id, nickname, pic, bucket')->append(['cover']);
             }])
             ->limit($limit['start'], $limit['limit'])
             ->select();
