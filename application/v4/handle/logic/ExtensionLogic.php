@@ -94,6 +94,7 @@ class ExtensionLogic extends BaseService
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
+        $user->money = $user->money - $amount;
         if (!$user->save()) {
             $data = json_encode(['userId' => $userId, 'amount' => $amount]);
             MyLog::error('提现保存失败:' . $data);
