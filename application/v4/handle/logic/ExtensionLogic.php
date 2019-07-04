@@ -200,7 +200,7 @@ class ExtensionLogic extends BaseService
             //不审核则不需要写入申请表
             //DistributionUserApply::create($userApply);
             //查找下一级的升级条件
-            $nextLevel = $this->getNextLevel($channel, 1);
+            $nextLevel = $this->getNextLevel($channel, 1)->toArray();
             $user['status'] = 1;
             $user['level'] = DistributionUpgradeCondition::field('min(level) as level')->where(['channel' => $channel])->find()['level'];
             if ($nextLevel) {
