@@ -52,6 +52,7 @@ class ExtensionLogic extends BaseService
             $query->where('status', 8);
         })->where('distribution_user_id', $request->user)
             ->sum('commission');
+
         $withdrawal = DistributionUser::where('id', $request->user)->value('withdrawal');
         $canWithdrawal = $withdrawalSum - $withdrawal;
 
@@ -72,7 +73,7 @@ class ExtensionLogic extends BaseService
         }
 
         $userId = request()->user;
-        $user = DistributionUser::where('id', $userId)->find();
+        $user = DistributionUser::where('userid', $userId)->find();
         if ($amount > $user['money']) {
             return error('40044', '超出可提现金额');
         }
@@ -148,6 +149,7 @@ class ExtensionLogic extends BaseService
         if ($shopConfig['is_apply'] == 2) {
             error(50000, "商家关闭了用户申请,请联系商家！");
         }
+
         //判断是否有条件
         switch ($shopConfig['is_condition']) {
             case 1://无条件加入
