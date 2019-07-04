@@ -8,5 +8,5 @@ use app\v4\model\BaseModel;
 
 class DistributionWithdrawHistory extends BaseModel
 {
-
+    public $autoWriteTimestamp = 'timestamp';
 }
