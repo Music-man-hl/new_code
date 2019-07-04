@@ -317,11 +317,12 @@ class ExtensionLogic extends BaseService
         $userLevel = $userInfo['level'] ?? 1;
         foreach ($product as $key => $value) {
             //如果是房型产品则需要重新查找数据
-            $product[$key]['id'] = encrypt($value['id'], 1);
             $product[$key]['sub_shop_id'] = encrypt($value['sub_shop_id'], 4);
             if ($value['type'] == 1){
+                $product[$key]['id'] = encrypt($value['id'], 6);
                 $product[$key]['pic'] = getBucket('hotel_room_type', 'cover', $value['pic']);
             }else{
+                $product[$key]['id'] = encrypt($value['id'], 1);
                 $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
             }
             if ($value['rate_type'] == 1) {//统一比例
