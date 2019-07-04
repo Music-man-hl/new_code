@@ -52,8 +52,9 @@ class ExtensionLogic extends BaseService
             $query->where('status', 8);
         })->where('distribution_user_id', $request->user)
             ->sum('commission');
+        
+        $withdrawal = DistributionUser::where('userid', $request->user)->value('withdrawal');
 
-        $withdrawal = DistributionUser::where('id', $request->user)->value('withdrawal');
         $canWithdrawal = $withdrawalSum - $withdrawal;
 
         return success(['can_withdrawal' => $canWithdrawal, 'profit' => $profit, 'profit_history' => $profitHistory]);
