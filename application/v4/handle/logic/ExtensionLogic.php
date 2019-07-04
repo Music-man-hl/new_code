@@ -305,7 +305,7 @@ class ExtensionLogic extends BaseService
             ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
             ->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
-     
+
         $count = DistributionProduct::alias('dp')
             ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
@@ -319,7 +319,11 @@ class ExtensionLogic extends BaseService
             //如果是房型产品则需要重新查找数据
             $product[$key]['id'] = encrypt($value['id'], 1);
             $product[$key]['sub_shop_id'] = encrypt($value['sub_shop_id'], 4);
-            $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
+            if ($value['type'] == 1){
+                $product[$key]['pic'] = getBucket('hotel_room_type', 'cover', $value['pic']);
+            }else{
+                $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
+            }
             if ($value['rate_type'] == 1) {//统一比例
                 $product[$key]['rate'] = ($value['rate_all'] ?? 0);
                 $product[$key]['predict'] = round($value['price'] * ($value['rate_all'] / 100), 2);

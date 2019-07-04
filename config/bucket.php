@@ -29,5 +29,9 @@ return [
     ],
     "distribution_product" => [
         'poster' => 'article-pic',
-    ]
+    ],
+    "hotel_room_type" => [
+        'cover' => 'room-pic',
+    ],
+
 ];
