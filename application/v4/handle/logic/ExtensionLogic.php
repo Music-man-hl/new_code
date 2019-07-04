@@ -118,7 +118,8 @@ class ExtensionLogic extends BaseService
         return success([
             'can' => $can,
             'icon' => 'https://article-pic.feekr.com/pic/icon/earn.png',
-            'poster' => DistributionProduct::DEFAULT_POSTER
+            'poster' => DistributionProduct::DEFAULT_POSTER,
+            'user_id' => $user
         ]);
     }
 
