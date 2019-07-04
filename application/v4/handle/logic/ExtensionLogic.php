@@ -88,7 +88,7 @@ class ExtensionLogic extends BaseService
 
         if (!$result) {
             //todo
-            MyLog::error('提现失败:' . $result);
+            MyLog::error('提现失败:金额:' . $amount . 'msg' . $result);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
