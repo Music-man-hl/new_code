@@ -160,7 +160,7 @@ class ExtensionLogic extends BaseService
                     $this->promotion($userId, $fromId, $channel, $shopConfig['is_review']);
                     break;
                 } else {
-                    error(41001, "必须购买过商品才能申请成为推广员！");
+                    success(['type' => 6, 'msg' => "必须购买过商品才能申请成为推广员"]);
                 }
         }
     }
@@ -171,7 +171,11 @@ class ExtensionLogic extends BaseService
         //判断用户是否已经是推广员
         $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find();
         if ($checkUser) {
-            success(['type' => 4, 'msg' => "用户已经是推广员"]);
+            if ($checkUser['status'] == 1) {
+                success(['type' => 4, 'msg' => "用户已经是推广员"]);
+            } else {
+                success(['type' => 7, 'msg' => "用户推广员被禁用"]);
+            }
         }
         //判断用户是否已报过名
         $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId, 'status' => 1])->find();
@@ -318,10 +322,10 @@ class ExtensionLogic extends BaseService
         foreach ($product as $key => $value) {
             //如果是房型产品则需要重新查找数据
             $product[$key]['sub_shop_id'] = encrypt($value['sub_shop_id'], 4);
-            if ($value['type'] == 1){
+            if ($value['type'] == 1) {
                 $product[$key]['id'] = encrypt($value['id'], 6);
                 $product[$key]['pic'] = getBucket('hotel_room_type', 'cover', $value['pic']);
-            }else{
+            } else {
                 $product[$key]['id'] = encrypt($value['id'], 1);
                 $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
             }
