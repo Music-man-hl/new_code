@@ -83,11 +83,11 @@ class ExtensionLogic extends BaseService
             return error(50000, '未找到OpenId');
         }
         $result = EasyWeChat::service()->transferToBalance($payee, $amount, '提现', $openId);
-        MyLog::debug('提现信息:' . json_encode($result));
+        MyLog::debug('提现信息:金额:' . $amount . 'msg' . json_encode($result));
 
         if (!$result) {
             //todo
-            MyLog::error('提现失败:' . $result);
+            MyLog::error('提现失败:金额:' . $amount . 'msg' . $result);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
