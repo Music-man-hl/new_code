@@ -428,9 +428,9 @@ class ExtensionLogic extends BaseService
         //判断是获取小程序二维码还是产品二维码
         if (isset($params['product_id']) && !empty($params['product_id'])) {
             if ($params['type'] == 1) {
-                $productId = encrypt($params['product_id'], 6);
+                $productId = encrypt($params['product_id'], 6, false);
             } else {
-                $productId = encrypt($params['product_id'], 1);
+                $productId = encrypt($params['product_id'], 1, false);
             }
             $shopId = $params['sub_shop_id'];
             $type = $params['type'];
