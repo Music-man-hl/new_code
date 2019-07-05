@@ -61,7 +61,7 @@ class ExtensionLogic extends BaseService
 
         $canWithdrawal = $withdrawalSum - $withdrawal;
 
-        return success(['can_withdrawal' => $canWithdrawal, 'profit' => $profit, 'profit_history' => $profitHistory]);
+        return success(['can_withdrawal' => round($canWithdrawal, 2), 'profit' => round($profit, 2), 'profit_history' => $profitHistory]);
     }
 
     public function withdraw()
