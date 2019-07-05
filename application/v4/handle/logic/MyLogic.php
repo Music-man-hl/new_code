@@ -85,9 +85,9 @@ class MyLogic extends BaseService
 
         $channel = $channels['channel'];
         $res = $this->query->getTel($users, $channel);
-        if (!empty($res['mobile'])) error(40000, '用户已绑定手机号！');
+        if (!empty($res['mobile'])) error(41101, '用户已绑定手机号！');
         $resM = $this->query->getTelByTel($tel, $channel);
-        if (!empty($resM['mobile'])) error(40000, '该手机号已被绑定！');
+        if (!empty($resM['mobile'])) error(41101, '该手机号已被绑定！');
         $this->query->bindUser($tel, $channel, $users);
         success(array('operation' => 1));
     }
