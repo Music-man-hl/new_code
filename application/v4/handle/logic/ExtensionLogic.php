@@ -77,10 +77,10 @@ class ExtensionLogic extends BaseService
             return error(40022);
         }
         if ($amount < 10) {
-            return error('提现金额必须大于10元');
+            return error(40002, '提现金额必须大于10元');
         }
         if ($amount > 5000) {
-            return error('提现金额必须小于5000元');
+            return error(40002, '提现金额必须小于5000元');
         }
 
         $userId = request()->user;
@@ -92,7 +92,7 @@ class ExtensionLogic extends BaseService
         $todayCount = DistributionWithdrawHistory::where('user_id', $userId)->where('create_time', '>=', date('Y-m-d 00:00:00'))
             ->where('create_time', '<=', date('Y-m-d 23:59:59'))->count();
         if ($todayCount >= 3) {
-            return error('一天最多只能提现3次');
+            return error(40002, '一天最多只能提现3次');
         }
 
         $openId = UserInfo::where('user', $user['userid'])->value('openid');
@@ -104,9 +104,9 @@ class ExtensionLogic extends BaseService
         $result = EasyWeChat::service()->transferToBalance($payee, $realAmount, '提现', $openId);
         MyLog::info('提现信息:金额:' . $realAmount . 'msg' . json_encode($result));
 
-        if (!$result) {
-            MyLog::error('提现失败:金额:' . $amount . 'msg' . $result);
-            return error('微信错误,提现失败');
+        if ($result['result_code'] !== 'SUCCESS') {
+            MyLog::error('提现失败:金额:' . $amount . 'msg' . json_encode($result));
+            return error(40002, '微信错误,提现失败');
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
@@ -119,7 +119,7 @@ class ExtensionLogic extends BaseService
 
         $dwh = new DistributionWithdrawHistory;
         $dwh->user_id = $userId;
-        $dwh->withdraw = $realAmount;
+        $dwh->withdraw = $amount;
         if (!$dwh->save()) {
             MyLog::error('提现记录保存失败:' . json_encode($dwh));
         }
