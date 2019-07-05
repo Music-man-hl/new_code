@@ -47,16 +47,12 @@ class ExtensionLogic extends BaseService
             ->order('create_time', 'desc')
             ->select();
 
-        $profit = DistributionUser::where('userid',$request->user)->value('money');
-
-        $withdrawalSum = DistributionOrder::hasWhere('orderInfo', function ($query) {
-            $query->where('status', 8);
+        $profit = DistributionOrder::hasWhere('orderInfo', function ($query) {
+            $query->where('status', '<>', 9);
         })->where('distribution_user_id', $request->user)
             ->sum('commission');
 
-        $withdrawal = DistributionUser::where('userid', $request->user)->value('withdrawal');
-
-        $canWithdrawal = $withdrawalSum - $withdrawal;
+        $canWithdrawal = DistributionUser::where('userid', $request->user)->value('money');
 
         return success(['can_withdrawal' => round($canWithdrawal, 2), 'profit' => round($profit, 2), 'profit_history' => $profitHistory]);
     }
