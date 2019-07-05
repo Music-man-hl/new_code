@@ -256,9 +256,10 @@ class RoomLogic extends BaseService
             $startTime = strtotime($allParam['checkin']);
             $endTime = strtotime($allParam['checkout']) - 1;
         } else {
-            $startTime = strtotime(date('Y-m-01', strtotime("+ $limit  month", $min)));
-            $startTime = max($startTime, TODAY);
-            $endTime = strtotime(date('Y-m-t', strtotime("+ $length month", $startTime)));
+            $startLimit = strtotime(date('Y-m-01', strtotime("+ $limit  month", $min)));
+            $startTime = max($startLimit, TODAY, $room['start']);
+            $endLimit = strtotime(date('Y-m-t', strtotime("+ $length month", $startTime)));
+            $endTime = min($endLimit, $room['end']);
         }
         $query->where('date', '>=', $startTime);
         $query->where('date', '<=', $endTime);
