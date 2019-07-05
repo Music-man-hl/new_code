@@ -100,7 +100,7 @@ class ExtensionLogic extends BaseService
             return error(50000, '未找到OpenId');
         }
 
-        $realAmount = $amount * 100 * (1 - self::HANDLING_FEE);
+        $realAmount = $amount * 100;
         $result = EasyWeChat::service()->transferToBalance($payee, $realAmount, '提现', $openId);
         MyLog::info('提现信息:金额:' . $realAmount . 'msg' . json_encode($result));
 
