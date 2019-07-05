@@ -106,7 +106,7 @@ class ExtensionLogic extends BaseService
 
         if ($result['result_code'] !== 'SUCCESS') {
             MyLog::error('提现失败:金额:' . $amount . 'msg' . json_encode($result));
-            return error(40002, '微信错误,提现失败');
+            return error(40002, $result['err_code_des']);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
