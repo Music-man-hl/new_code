@@ -47,10 +47,7 @@ class ExtensionLogic extends BaseService
             ->order('create_time', 'desc')
             ->select();
 
-        $profit = DistributionOrder::hasWhere('orderInfo', function ($query) {
-            $query->where('status', '<>', 9);
-        })->where('distribution_user_id', $request->user)
-            ->sum('commission');
+        $profit = DistributionUser::where('userid',$request->user)->value('money');
 
         $withdrawalSum = DistributionOrder::hasWhere('orderInfo', function ($query) {
             $query->where('status', 8);
@@ -106,7 +103,7 @@ class ExtensionLogic extends BaseService
 
         if ($result['result_code'] !== 'SUCCESS') {
             MyLog::error('提现失败:金额:' . $amount . 'msg' . json_encode($result));
-            return error(40002, '微信错误,提现失败');
+            return error(40002, $result['err_code_des']);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
