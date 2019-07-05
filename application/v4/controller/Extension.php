@@ -11,8 +11,9 @@ class Extension extends Base
     protected function access()
     {
         return [
-            'commission' => ['type' => 'GET', 'lived' => false],
-            'withdraw' => ['type' => 'GET', 'lived' => false],
+            'commission' => ['type' => 'GET', 'lived' => true],
+            'withdraw' => ['type' => 'GET', 'lived' => true],
+            'product_can' => ['type' => 'GET', 'lived' => true],
             'detail' => ['type' => 'GET', 'lived' => false],
             'application' => ['type' => 'POST', 'lived' => false],
             'upgrade' => ['type' => 'GET', 'lived' => false],

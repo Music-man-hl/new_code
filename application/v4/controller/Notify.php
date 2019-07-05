@@ -13,6 +13,7 @@ use app\v4\handle\logic\PayLogic;
 use app\v4\model\Main\ChannelInfo;
 use app\v4\Services\WeixinPay;
 use Exception;
+use lib\MyLog;
 use pay\PayNotifyCallBack;
 use think\Controller;
 use think\facade\Cache;
@@ -66,7 +67,9 @@ class Notify extends Controller
             $data['channel'] = $getChannelId;//真实渠道信息
             $data['version'] = $attach_array[2];//版本
 
+            MyLog::info('---微信回调通知开始---');
             PayLogic::service()->notify($data); //微信回调通知
+            MyLog::info('---微信回调通知结束---');
             ExtensionLogic::service()->sendMq($attach_array[1]);
         }
 

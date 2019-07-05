@@ -4,6 +4,7 @@
 namespace app\v4\handle\logic;
 
 
+use app\v4\model\Main\Channel;
 use app\v4\model\Shop\DistributionOrder;
 use app\v4\model\Shop\DistributionProduct;
 use app\v4\model\Shop\DistributionPromotionConfig;
@@ -12,8 +13,9 @@ use app\v4\model\Shop\DistributionRecruitPage;
 use app\v4\model\Shop\DistributionUpgradeCondition;
 use app\v4\model\Shop\DistributionUser;
 use app\v4\model\Shop\DistributionUserApply;
+use app\v4\model\Shop\DistributionWithdrawHistory;
 use app\v4\model\Shop\Order;
-use app\v4\model\Shop\Product;
+use app\v4\model\Shop\ProductUnion;
 use app\v4\model\Shop\User;
 use app\v4\model\Shop\UserInfo;
 use app\v4\Services\BaseService;
@@ -25,6 +27,7 @@ use think\facade\Request;
 
 class ExtensionLogic extends BaseService
 {
+    const HANDLING_FEE = 0.006;
 
     public function commission()
     {
@@ -32,13 +35,16 @@ class ExtensionLogic extends BaseService
         $limit = startLimit($request->param());
         $profitHistory = DistributionOrder::hasWhere('orderInfo', function ($query) {
             $query->where('status', '<>', 9);
-        })->where('distribution_user_id', $request->user)
+        })
+            ->where('distribution_user_id', $request->user)
             ->with(['orderInfo' => function ($query) {
-                $query->field('product_name,order, date, status');
-            }, 'user' => function ($query) {
-                $query->field('id, nickname, pic, bucket');
+                $query->field('product_name,order, date, status, uid')
+                    ->with(['userInfo' => function ($query) {
+                        $query->field('user, nickname, headimgurl');
+                    }]);
             }])
             ->limit($limit['start'], $limit['limit'])
+            ->order('create_time', 'desc')
             ->select();
 
         $profit = DistributionOrder::hasWhere('orderInfo', function ($query) {
@@ -46,14 +52,9 @@ class ExtensionLogic extends BaseService
         })->where('distribution_user_id', $request->user)
             ->sum('commission');
 
-        $withdrawalSum = DistributionOrder::hasWhere('orderInfo', function ($query) {
-            $query->where('status', 8);
-        })->where('distribution_user_id', $request->user)
-            ->sum('commission');
-        $withdrawal = DistributionUser::where('id', $request->user)->value('withdrawal');
-        $canWithdrawal = $withdrawalSum - $withdrawal;
+        $canWithdrawal = DistributionUser::where('userid', $request->user)->value('money');
 
-        return success(['can_withdrawal' => $canWithdrawal, 'profit' => $profit, 'profit_history' => $profitHistory]);
+        return success(['can_withdrawal' => round($canWithdrawal, 2), 'profit' => round($profit, 2), 'profit_history' => $profitHistory]);
     }
 
     public function withdraw()
@@ -63,30 +64,57 @@ class ExtensionLogic extends BaseService
         $amount = Request::param('amount');
 
         if (!$payee || !is_string($payee)) {
-            return error(40022);
+            return error(40122);
         }
         if (!$amount || !is_numeric($amount)) {
-            return error(40022);
+            return error(40122);
+        }
+        if ($amount < 10) {
+            return error(40112, '提现金额必须大于10元');
+        }
+        if ($amount > 5000) {
+            return error(40112, '提现金额必须小于5000元');
         }
 
         $userId = request()->user;
-        $user = DistributionUser::where('id', $userId)->find();
+        $user = DistributionUser::where('userid', $userId)->find();
         if ($amount > $user['money']) {
-            return error('40044', '超出可提现金额');
+            return error(40112, '超出可提现金额');
         }
 
-        $openId = UserInfo::where('user', $user)->value('openid');
-        $result = EasyWeChat::service()->transferToBalance($payee, $amount, '提现', $openId);
+        $todayCount = DistributionWithdrawHistory::where('user_id', $userId)->where('create_time', '>=', date('Y-m-d 00:00:00'))
+            ->where('create_time', '<=', date('Y-m-d 23:59:59'))->count();
+        if ($todayCount >= 3) {
+            return error(40112, '一天最多只能提现3次');
+        }
 
-        if (!$result) {
-            //todo
+        $openId = UserInfo::where('user', $user['userid'])->value('openid');
+        if (!$openId) {
+            return error(50000, '未找到OpenId');
+        }
+
+        $realAmount = $amount * 100;
+        $result = EasyWeChat::service()->transferToBalance($payee, $realAmount, '提现', $openId);
+        MyLog::info('提现信息:金额:' . $realAmount . 'msg' . json_encode($result));
+
+        if ($result['result_code'] !== 'SUCCESS') {
+            MyLog::error('提现失败:金额:' . $amount . 'msg' . json_encode($result));
+            return error(40112, $result['err_code_des']);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
+        $user->money = $user->money - $amount;
         if (!$user->save()) {
             $data = json_encode(['userId' => $userId, 'amount' => $amount]);
             MyLog::error('提现保存失败:' . $data);
             return error('50000', '提现保存失败');
+        }
+
+        $dwh = new DistributionWithdrawHistory;
+        $dwh->user_id = $userId;
+        $dwh->withdraw = $amount;
+        if (!$dwh->save()) {
+            MyLog::error('提现记录保存失败:' . json_encode($dwh));
         }
         return success();
     }
@@ -95,9 +123,14 @@ class ExtensionLogic extends BaseService
     {
         $productId = encrypt(Request::param('product_id'), 1, false);
         $productType = Request::param('product_type');
-        $dp = DistributionProduct::where('id', $productId)->where('type', $productType)->find();
-        $user = DistributionUser::where('userid', $user['id'])->where('status', DistributionUser::AVAILABLE_STATUS)->find();
-        if ($dp && $user) {
+        if ($productType == 1) {
+            $productId = encrypt(Request::param('product_id'), 6, false);
+        }
+        $isExtension = Channel::where('id', request()->channel['channelId'])->where('extension_status', 1)->find();
+        $dp = DistributionProduct::where('id', $productId)->where('type', $productType)
+            ->where('status', DistributionProduct::AVAILABLE_STATUS)->find();
+        $userInfo = DistributionUser::where('userid', $user)->where('status', DistributionUser::AVAILABLE_STATUS)->find();
+        if ($dp && $userInfo && $isExtension) {
             $can = 1;
         } else {
             $can = 0;
@@ -105,7 +138,8 @@ class ExtensionLogic extends BaseService
         return success([
             'can' => $can,
             'icon' => 'https://article-pic.feekr.com/pic/icon/earn.png',
-            'poster' => DistributionProduct::DEFAULT_POSTER
+            'poster' => DistributionProduct::DEFAULT_POSTER,
+            'user_id' => $user
         ]);
     }
 
@@ -133,11 +167,19 @@ class ExtensionLogic extends BaseService
         }
         $fromId = $params['from_id'];
         //根据当前用户配置判断
+        //判断是否开启分销
+        $channelInfo = Channel::field('extension_status')->where(['id' => $channel])->find();
+        $ex_status = $channelInfo['extension_status'];
+        if ($ex_status == 2) {
+            error(50000, "商家关闭了分销功能,请联系商家！");
+        }
+
         $shopConfig = DistributionPromotionConfig::field('id,channel,is_apply,is_condition,is_review,is_notice,level_up_node')->where(['channel' => $channel])->find();
         //判断是否允许加入
         if ($shopConfig['is_apply'] == 2) {
             error(50000, "商家关闭了用户申请,请联系商家！");
         }
+
         //判断是否有条件
         switch ($shopConfig['is_condition']) {
             case 1://无条件加入
@@ -150,7 +192,7 @@ class ExtensionLogic extends BaseService
                     $this->promotion($userId, $fromId, $channel, $shopConfig['is_review']);
                     break;
                 } else {
-                    error(41001, "必须购买过商品才能申请成为推广员！");
+                    success(['type' => 6, 'msg' => "必须购买过商品才能申请成为推广员"]);
                 }
         }
     }
@@ -159,7 +201,19 @@ class ExtensionLogic extends BaseService
     public function promotion($userId, $fromId, $channel, $isReview)
     {
         //判断用户是否已经是推广员
-
+        $checkUser = DistributionUser::where(['channel' => $channel, 'userid' => $userId])->find();
+        if ($checkUser) {
+            if ($checkUser['status'] == 1) {
+                success(['type' => 4, 'msg' => "用户已经是推广员"]);
+            } else {
+                success(['type' => 7, 'msg' => "用户推广员被禁用"]);
+            }
+        }
+        //判断用户是否已报过名
+        $checkUser = DistributionUserApply::where(['channel' => $channel, 'userid' => $userId, 'status' => 1])->find();
+        if ($checkUser) {
+            success(['type' => 5, 'msg' => "用户已经报名"]);
+        }
         //获取用户信息并加入申请表中
         $userInfo = User::alias('u')
             ->field('u.mobile,u.nickname,i.headimgurl,i.openid')
@@ -180,11 +234,12 @@ class ExtensionLogic extends BaseService
             //不审核
             $user = $userApply;
             $userApply['status'] = 2;
-            //写入申请表
-            DistributionUserApply::create($userApply);
+            //不审核则不需要写入申请表
+            //DistributionUserApply::create($userApply);
             //查找下一级的升级条件
-            $nextLevel = $this->getNextLevel($channel, 1);
-
+            $nextLevel = $this->getNextLevel($channel, 1)->toArray();
+            $user['status'] = 1;
+            $user['level'] = DistributionUpgradeCondition::field('min(level) as level')->where(['channel' => $channel])->find()['level'];
             if ($nextLevel) {
                 $user['next_level_order'] = $nextLevel[0]['order_num'];
                 $user['next_level_money'] = $nextLevel[0]['money'];
@@ -199,7 +254,7 @@ class ExtensionLogic extends BaseService
                 curl_file_get_contents($url, $data);
                 success(['type' => 1, 'msg' => "成功成为推广员"]);
             } else {
-                error(['type' => 3, 'msg' => "写入用户失败"]);
+                success(['type' => 3, 'msg' => "写入用户失败"]);
             }
         } else {
             //审核
@@ -209,7 +264,7 @@ class ExtensionLogic extends BaseService
             if ($res) {
                 success(['type' => 2, 'msg' => "报名成功，请等待审核"]);
             } else {
-                error(['type' => 3, 'msg' => "写入用户失败"]);
+                success(['type' => 3, 'msg' => "写入用户失败"]);
             }
         }
 
@@ -281,23 +336,31 @@ class ExtensionLogic extends BaseService
     {
         $page = $params['page'] ?? 1;
         $product = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,p.shop_id as sub_shop_id,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
-            ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1])
+            ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+            ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
+            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
             ->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
+
         $count = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,p.shop_id as sub_shop_id,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
-            ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1])
+            ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+            ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
+            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
             ->count();
+
         //获取用户等级信息
         $userInfo = DistributionUser::field('userid,level')->where(['userid' => $userId])->find();
         $userLevel = $userInfo['level'] ?? 1;
         foreach ($product as $key => $value) {
-            $product[$key]['id'] = encrypt($value['id'], 1);
+            //如果是房型产品则需要重新查找数据
             $product[$key]['sub_shop_id'] = encrypt($value['sub_shop_id'], 4);
-            $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
+            if ($value['type'] == 1) {
+                $product[$key]['id'] = encrypt($value['id'], 6);
+                $product[$key]['pic'] = getBucket('hotel_room_type', 'cover', $value['pic']);
+            } else {
+                $product[$key]['id'] = encrypt($value['id'], 1);
+                $product[$key]['pic'] = getBucket('product', 'pic', $value['pic']);
+            }
             if ($value['rate_type'] == 1) {//统一比例
                 $product[$key]['rate'] = ($value['rate_all'] ?? 0);
                 $product[$key]['predict'] = round($value['price'] * ($value['rate_all'] / 100), 2);
@@ -326,9 +389,16 @@ class ExtensionLogic extends BaseService
     public function poster($userId, $params)
     {
         if (!isset($params['product_id'])) {
-            error(40000, "product_id");
+            error(40000, "product_id null");
         }
-        $productId = encrypt($params['product_id'], 1, false);
+        if (!isset($params['type'])) {
+            error(40000, "type null");
+        }
+        if ($params['type'] == 1) {
+            $productId = encrypt($params['product_id'], 6, false);
+        } else {
+            $productId = encrypt($params['product_id'], 1, false);
+        }
         //获取用户等级等信息
         $userInfo = DistributionUser::field('nickname,avatar')
             ->where(['userid' => $userId])
@@ -347,7 +417,7 @@ class ExtensionLogic extends BaseService
             }
 
         } else {
-            error(50000, '该商品未设置海报!');
+            $result['poster'] = [];
         }
         success($result);
     }
@@ -358,15 +428,16 @@ class ExtensionLogic extends BaseService
         //先从数据库里找 如果没有则调后台接口
         $app_version = Env::get("MP_APP_VERSION");
         $app_url = $params['app_url'];
+        $api = DOMAIN_MP . "/link/front_qrcode?api_version=$app_version&channel=$channel&app_url=$app_url";
+        if (isset($params['is_hyaline'])) {
+            $api .= "&is_hyaline=1";
+        }
         //判断是获取小程序二维码还是产品二维码
         if (isset($params['product_id']) && !empty($params['product_id'])) {
             $productId = $params['product_id'];
             $shopId = $params['sub_shop_id'];
-            $app_url .= "?product_id=$productId&sub_shop_id=$shopId&uid=$user";
-        }
-        $api = DOMAIN_MP . "/link/front_qrcode?api_version=$app_version&channel=$channel&app_url=$app_url";
-        if (isset($params['is_hyaline'])) {
-            $api .= "is_hyaline=1";
+            $type = $params['type'];
+            $api .= "&product_id=$productId&sub_shop_id=$shopId&uid=$user&type=$type";
         }
         $res = curl_file_get_contents($api);
         print_r($res);

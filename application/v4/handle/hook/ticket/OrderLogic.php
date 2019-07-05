@@ -8,12 +8,12 @@
 
 namespace app\v4\handle\hook\ticket;
 
+use app\v4\model\Main\InformTpl;
 use app\v4\model\Main\Shop;
 use app\v4\model\MpOrder\OrderTask;
 use app\v4\model\Shop\Coupon;
 use app\v4\model\Shop\CouponCode;
 use app\v4\model\Shop\InformMsg;
-use app\v4\model\Shop\InformTpl;
 use app\v4\model\Shop\Order;
 use app\v4\model\Shop\OrderBookingUserinfo;
 use app\v4\model\Shop\OrderContact;

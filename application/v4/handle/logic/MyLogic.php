@@ -4,6 +4,7 @@ namespace app\v4\handle\logic;
 
 use app\v4\handle\query\MyQuery;
 use app\v4\Services\BaseService;
+use lib\MyLog;
 use lib\SmsSend;
 use lib\ValidPic;
 use lib\ValidSMS;
@@ -60,31 +61,33 @@ class MyLogic extends BaseService
     public function bind_wx_mobile($channels, $params, $users)
     {
         //解密微信数据
-        if (empty($shopId = encrypt($params['shop_id'], 3, false))) error(40000, '店铺ID错误');
+        if (empty($shopId = encrypt($params['shop_id'], 3, false))) error(41101, '店铺ID错误');
         // 店铺授权
         $res = $this->query->getChannelInfoAndThirdUser($shopId, self::APPLET);
-        if (empty($res)) error(48001, '该店铺小程序未授权');
-        if ($res['status'] != self::AUTH_OK) error(48001, '该小程序未授权');
+        if (empty($res)) error(41101, '该店铺小程序未授权');
+        if ($res['status'] != self::AUTH_OK) error(41101, '该小程序未授权');
 
-        if (empty($appid = $res->thirdUser['appid'])) error(48001, '小程序appid错误');
+        if (empty($appid = $res->thirdUser['appid'])) error(41101, '小程序appid错误');
         $server = new WxServer;
         // 通过code获取session_key
+        //记录code调用
+        MyLog::debug("data:" . json_encode($params));
         $sessionData = $server->getSessionKey($appid, $params['code']);
 
         $wxData = '';
         //获取解密信息
         $pc = new WxBizDataCrypt($appid, $sessionData['session_key']);
         $errCode = $pc->decryptData($params['encryptedData'], $params['iv'], $wxData);
-        if ($errCode) error(50000, '数据解密错误');
+        if ($errCode) error(41101, '数据解密错误');
         $wxData = filterEmoji($wxData);
         $wxData = json_decode($wxData, true);
         $tel = $wxData['phoneNumber'] ?? error("获取用户手机号失败!");
 
         $channel = $channels['channel'];
         $res = $this->query->getTel($users, $channel);
-        if (!empty($res['mobile'])) error(40000, '用户已绑定手机号！');
+        if (!empty($res['mobile'])) error(41101, '用户已绑定手机号！');
         $resM = $this->query->getTelByTel($tel, $channel);
-        if (!empty($resM['mobile'])) error(40000, '该手机号已被绑定！');
+        if (!empty($resM['mobile'])) error(41101, '该手机号已被绑定！');
         $this->query->bindUser($tel, $channel, $users);
         success(array('operation' => 1));
     }
