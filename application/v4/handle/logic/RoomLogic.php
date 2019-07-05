@@ -237,9 +237,7 @@ class RoomLogic extends BaseService
 
         $room = HotelRoomType::where('id', $room_id)->find();
 
-        $min = HotelBooking::field('date')
-            ->where('room', $room_id)
-            ->min('date', false);
+        $min = TODAY;
 
         $max = HotelBooking::field('date')
             ->where('room', $room_id)
@@ -259,6 +257,7 @@ class RoomLogic extends BaseService
             $endTime = strtotime($allParam['checkout']) - 1;
         } else {
             $startTime = strtotime(date('Y-m-01', strtotime("+ $limit  month", $min)));
+            $startTime = max($startTime, TODAY);
             $endTime = strtotime(date('Y-m-t', strtotime("+ $length month", $startTime)));
         }
         $query->where('date', '>=', $startTime);
