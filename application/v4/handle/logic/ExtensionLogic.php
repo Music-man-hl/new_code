@@ -64,28 +64,28 @@ class ExtensionLogic extends BaseService
         $amount = Request::param('amount');
 
         if (!$payee || !is_string($payee)) {
-            return error(40022);
+            return error(40122);
         }
         if (!$amount || !is_numeric($amount)) {
-            return error(40022);
+            return error(40122);
         }
         if ($amount < 10) {
-            return error(40002, '提现金额必须大于10元');
+            return error(40112, '提现金额必须大于10元');
         }
         if ($amount > 5000) {
-            return error(40002, '提现金额必须小于5000元');
+            return error(40112, '提现金额必须小于5000元');
         }
 
         $userId = request()->user;
         $user = DistributionUser::where('userid', $userId)->find();
         if ($amount > $user['money']) {
-            return error('40044', '超出可提现金额');
+            return error(40112, '超出可提现金额');
         }
 
         $todayCount = DistributionWithdrawHistory::where('user_id', $userId)->where('create_time', '>=', date('Y-m-d 00:00:00'))
             ->where('create_time', '<=', date('Y-m-d 23:59:59'))->count();
         if ($todayCount >= 3) {
-            return error(40002, '一天最多只能提现3次');
+            return error(40112, '一天最多只能提现3次');
         }
 
         $openId = UserInfo::where('user', $user['userid'])->value('openid');
@@ -99,7 +99,7 @@ class ExtensionLogic extends BaseService
 
         if ($result['result_code'] !== 'SUCCESS') {
             MyLog::error('提现失败:金额:' . $amount . 'msg' . json_encode($result));
-            return error(40002, $result['err_code_des']);
+            return error(40112, $result['err_code_des']);
         }
 
         $user->withdrawal = $user->withdrawal + $amount;
