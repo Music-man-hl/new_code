@@ -443,7 +443,8 @@ class ExtensionLogic extends BaseService
         if (isset($params['product_id']) && !empty($params['product_id'])) {
             $productId = $params['product_id'];
             $shopId = $params['sub_shop_id'];
-            $api .= "&product_id=$productId&sub_shop_id=$shopId&uid=$user";
+            $type = $params['type'];
+            $api .= "&product_id=$productId&sub_shop_id=$shopId&uid=$user&type=$type";
         }
         $res = curl_file_get_contents($api);
         print_r($res);
