@@ -4,6 +4,7 @@ namespace app\v4\handle\logic;
 
 use app\v4\handle\query\MyQuery;
 use app\v4\Services\BaseService;
+use lib\MyLog;
 use lib\SmsSend;
 use lib\ValidPic;
 use lib\ValidSMS;
@@ -69,6 +70,8 @@ class MyLogic extends BaseService
         if (empty($appid = $res->thirdUser['appid'])) error(48001, '小程序appid错误');
         $server = new WxServer;
         // 通过code获取session_key
+        //记录code调用
+        MyLog::debug("data:" . json_encode($params));
         $sessionData = $server->getSessionKey($appid, $params['code']);
 
         $wxData = '';
