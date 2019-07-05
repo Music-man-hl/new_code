@@ -27,6 +27,7 @@ use think\facade\Request;
 
 class ExtensionLogic extends BaseService
 {
+    const HANDLING_FEE = 0.006;
 
     public function commission()
     {
@@ -75,6 +76,12 @@ class ExtensionLogic extends BaseService
         if (!$amount || !is_numeric($amount)) {
             return error(40022);
         }
+        if ($amount < 10) {
+            return error('提现金额必须大于10元');
+        }
+        if ($amount > 5000) {
+            return error('提现金额必须小于5000元');
+        }
 
         $userId = request()->user;
         $user = DistributionUser::where('userid', $userId)->find();
@@ -82,14 +89,20 @@ class ExtensionLogic extends BaseService
             return error('40044', '超出可提现金额');
         }
 
+        $todayCount = DistributionWithdrawHistory::where('user_id', $userId)->where('create_time', '>=', date('Y-m-d 00:00:00'))
+            ->where('create_time', '<=', date('Y-m-d 23:59:59'))->count();
+        if ($todayCount >= 3) {
+            return error('一天最多只能提现3次');
+        }
+
         $openId = UserInfo::where('user', $user['userid'])->value('openid');
         if (!$openId) {
             return error(50000, '未找到OpenId');
         }
 
-        $realAmount = $amount * 100;
+        $realAmount = $amount * 100 * (1 - self::HANDLING_FEE);
         $result = EasyWeChat::service()->transferToBalance($payee, $realAmount, '提现', $openId);
-        MyLog::info('提现信息:金额:' . $amount . 'msg' . json_encode($result));
+        MyLog::info('提现信息:金额:' . $realAmount . 'msg' . json_encode($result));
 
         if (!$result) {
             MyLog::error('提现失败:金额:' . $amount . 'msg' . $result);
@@ -103,6 +116,7 @@ class ExtensionLogic extends BaseService
             MyLog::error('提现保存失败:' . $data);
             return error('50000', '提现保存失败');
         }
+
         $dwh = new DistributionWithdrawHistory;
         $dwh->user_id = $userId;
         $dwh->withdraw = $realAmount;
