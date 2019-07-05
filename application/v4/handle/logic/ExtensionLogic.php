@@ -41,6 +41,7 @@ class ExtensionLogic extends BaseService
                 $query->field('id, nickname, pic, bucket')->append(['cover']);
             }])
             ->limit($limit['start'], $limit['limit'])
+            ->order('create_time','desc')
             ->select();
 
         $profit = DistributionOrder::hasWhere('orderInfo', function ($query) {
