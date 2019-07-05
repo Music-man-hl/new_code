@@ -16,6 +16,11 @@ class Order extends BaseModel
 
     const APPLET = 1;//微信小程序
 
+    public function userInfo()
+    {
+        return $this->belongsTo(UserInfo::class,'uid','user');
+    }
+
     public function ext()
     {
         return $this->hasOne(OrderExt::class, 'order_id', 'id');

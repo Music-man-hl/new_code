@@ -34,14 +34,16 @@ class ExtensionLogic extends BaseService
         $limit = startLimit($request->param());
         $profitHistory = DistributionOrder::hasWhere('orderInfo', function ($query) {
             $query->where('status', '<>', 9);
-        })->where('distribution_user_id', $request->user)
+        })
+            ->where('distribution_user_id', $request->user)
             ->with(['orderInfo' => function ($query) {
-                $query->field('product_name,order, date, status');
-            }, 'user' => function ($query) {
-                $query->field('id, nickname, pic, bucket')->append(['cover']);
+                $query->field('product_name,order, date, status, uid')
+                    ->with(['userInfo' => function ($query) {
+                        $query->field('user, nickname, headimgurl');
+                    }]);
             }])
             ->limit($limit['start'], $limit['limit'])
-            ->order('create_time','desc')
+            ->order('create_time', 'desc')
             ->select();
 
         $profit = DistributionOrder::hasWhere('orderInfo', function ($query) {
