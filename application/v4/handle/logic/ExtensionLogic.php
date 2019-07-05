@@ -407,7 +407,7 @@ class ExtensionLogic extends BaseService
             }
 
         } else {
-            error(50000, '该商品未设置海报!');
+            $result['poster'] = [];
         }
         success($result);
     }
