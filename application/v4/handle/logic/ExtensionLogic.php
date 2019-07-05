@@ -116,7 +116,7 @@ class ExtensionLogic extends BaseService
         if ($productType == 1) {
             $productId = encrypt(Request::param('product_id'), 6, false);
         }
-        $isExtension = Channel::where(request()->channel['channelId'])->where('extension_status', 1)->find();
+        $isExtension = Channel::where('id', request()->channel['channelId'])->where('extension_status', 1)->find();
         $dp = DistributionProduct::where('id', $productId)->where('type', $productType)
             ->where('status', DistributionProduct::AVAILABLE_STATUS)->find();
         $userInfo = DistributionUser::where('userid', $user)->where('status', DistributionUser::AVAILABLE_STATUS)->find();
