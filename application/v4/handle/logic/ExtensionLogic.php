@@ -368,9 +368,16 @@ class ExtensionLogic extends BaseService
     public function poster($userId, $params)
     {
         if (!isset($params['product_id'])) {
-            error(40000, "product_id");
+            error(40000, "product_id null");
         }
-        $productId = encrypt($params['product_id'], 1, false);
+        if (!isset($params['type'])) {
+            error(40000, "type null");
+        }
+        if ($params['type'] == 1) {
+            $productId = encrypt($params['product_id'], 6, false);
+        } else {
+            $productId = encrypt($params['product_id'], 1, false);
+        }
         //获取用户等级等信息
         $userInfo = DistributionUser::field('nickname,avatar')
             ->where(['userid' => $userId])
