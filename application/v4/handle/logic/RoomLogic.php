@@ -256,7 +256,7 @@ class RoomLogic extends BaseService
 
         if (isset($allParam['checkin']) && isset($allParam['checkout'])) {
             $startTime = strtotime($allParam['checkin']);
-            $endTime = strtotime($allParam['checkout']);
+            $endTime = strtotime($allParam['checkout']) - 1;
         } else {
             $startTime = strtotime(date('Y-m-01', strtotime("+ $limit  month", $min)));
             $endTime = strtotime(date('Y-m-t', strtotime("+ $length month", $startTime)));
