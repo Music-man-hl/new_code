@@ -120,7 +120,7 @@ class AuthQuery
 
             $row = User::where('id', $id)->update($userData);
 
-            if (!$row) {
+            if ($row === false) {
                 throw new \Exception('用户更新失败');
             }
 
@@ -140,7 +140,7 @@ class AuthQuery
 
             $row = UserInfo::where(['channel' => $channel, 'user' => $id])->update($data);
 
-            if ($row !== false) {
+            if ($row === false) {
                 S::log(['channel' => $channel, 'user' => $id, 'data' => $data]);
                 throw new \Exception('用户信息更新失败');
             }
