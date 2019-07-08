@@ -44,7 +44,7 @@ class AuthQuery
     // 添加用户
     public function addUser($channel, $userData)
     {
-        //Db::startTrans();
+        User::startTrans();
         try {
 
             $data = [
@@ -89,10 +89,10 @@ class AuthQuery
                 throw new \Exception('用户信息添加失败');
             }
 
-            //Db::commit();
+            User::commit();
             return $id;
         } catch (\Exception $e) {
-            //Db::rollback();
+            User::rollback();
             Error::set(1, $e->getMessage());
             return false;
         }
@@ -115,7 +115,7 @@ class AuthQuery
 
     public function updateUser($id, $channel, $userData, $data)
     {
-        //Db::startTrans();
+        User::startTrans();
         try {
 
             $row = User::where('id', $id)->update($userData);
@@ -140,15 +140,15 @@ class AuthQuery
 
             $row = UserInfo::where(['channel' => $channel, 'user' => $id])->update($data);
 
-            if (!$row) {
+            if ($row !== false) {
                 S::log(['channel' => $channel, 'user' => $id, 'data' => $data]);
                 throw new \Exception('用户信息更新失败');
             }
 
-            //Db::commit();
+            User::commit();
             return true;
         } catch (\Exception $e) {
-            //Db::rollback();
+            User::rollback();
             Error::set(1, $e->getMessage());
             return false;
         }
