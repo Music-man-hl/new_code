@@ -352,7 +352,7 @@ class DigitalLogic extends BaseService
         if (empty($id)) error(40000, 'id不正确');
 
         $data = DigitalLine::where('id', $id)->where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::LINE_STATUS_OK)
-            ->field('cover,intro,intro_url as url,appid,app_url')->find();
+            ->field('cover,intro,intro_url as url,appid,app_url,app_data as data')->find();
 
         if (empty($data)) {
             error(50000, '没有找到此单线');
@@ -360,7 +360,7 @@ class DigitalLogic extends BaseService
 
         $data['cover'] = getBucket('digital_line', 'cover', $data['cover']);
 
-        success(empty($data) ? ['cover' => '', 'intro' => '', 'url' => '', 'appid' => '', 'app_url' => ''] : $data);
+        success(empty($data) ? ['cover' => '', 'intro' => '', 'url' => '', 'appid' => '', 'app_url' => '', 'data' => ''] : $data);
 
     }
 
@@ -673,7 +673,7 @@ class DigitalLogic extends BaseService
         $id = intval(encrypt($all_param['id'], Status::ENCRYPT_PRODUCT, false));
         if (empty($id) || empty($type)) error(40000, 'id不正确');
 
-        if($type == Status::SHOP_TYPE_DIGITAL){
+        if ($type == Status::SHOP_TYPE_DIGITAL) {
 
             $data = DigitalProductRelation::where('channel', $channel)->where('pid', $id)->find();
             if (empty($data)) {
@@ -682,7 +682,7 @@ class DigitalLogic extends BaseService
                     $mobile = isMobile($tels['tel']) ? $tels['tel'] : ($tels['citycode'] . '-' . $tels['tel']);
                 }
             } else {
-                $appid  = $data->appid;
+                $appid = $data->appid;
                 $url = $data->url;
             }
 
