@@ -281,14 +281,14 @@ class ExtensionLogic extends BaseService
     //获取当前渠道升级规则
     public function upgrade($channel)
     {
-        $result = DistributionUpgradeCondition::field('id,channel,level,level_name,all_order_num,all_money')->where(['channel' => $channel])->select();
+        $result = DistributionUpgradeCondition::field('id,channel,level,level_name,order_num as all_order_num,money as all_money')->where(['channel' => $channel])->select();
         if ($result) {
             $data['upgrade_condition'] = $result;
         } else {
             error(["msg" => "获取升级规则失败"]);
         }
         //获取常见问题
-        $result = DistributionQuestion::field('id,question,answer')->where(['channel' => $channel])->select();
+        $result = DistributionQuestion::field('id,question,answer')->select();
         $data['question'] = $result;
         success($data);
     }
@@ -335,18 +335,15 @@ class ExtensionLogic extends BaseService
     public function product($channel, $userId, $params)
     {
         $page = $params['page'] ?? 1;
-        $product = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
+        $query = DistributionProduct::alias('dp')
+            ->field('p.id,p.name,p.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
-            ->order("dp.create_time DESC")
+            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1]);
+
+        $product = $query->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
 
-        $count = DistributionProduct::alias('dp')
-            ->field('p.id,p.name,dp.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
-            ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1])
-            ->count();
+        $count = $query->count();
 
         //获取用户等级信息
         $userInfo = DistributionUser::field('userid,level')->where(['userid' => $userId])->find();
