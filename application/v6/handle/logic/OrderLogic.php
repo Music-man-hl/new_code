@@ -79,6 +79,8 @@ class OrderLogic extends BaseService
             $data['room_id'] = $data['id'];
         } elseif ($params['type'] == '2') {
             $data['ticket_id'] = encrypt($params['id'], 1, false);
+        } elseif ($params['type'] == 4) {
+//            $data['id'] = encrypt($params['id'], 1, false);
         } else {
             error(40000, '参数不正确!');
         }
@@ -190,18 +192,10 @@ class OrderLogic extends BaseService
         $count = $this->query->getOrdersCount($channels, $users, $status);
         $list = [];
         // 加密使用的key标志 从app.php读取
-        $type = [5 => 1, 1 => 6, 2 => 1];
+        $type = [1 => 6, 2 => 1, 4 => 1, 5 => 1];
         if ($orders) {
             foreach ($orders as $order) {
                 $data = json_decode($order->info['data'], true);
-                // if ($order['status'] == 3 && ($order['refund_status'] == 0 || $order['refund_status'] == 2)) {
-                //     $refund = true;
-                // } else {
-                //     $refund = false;
-                // }
-                // if (\in_array($order['status'], [Status::ORDER_PAY,Status::ORDER_CONFIRM])
-                //     && \in_array($order['refund_status'], [])) {
-                // }
                 $refund = $this->checkRefundable($order);
                 $expire = NOW - 1800;
                 if ($order['status'] == 2 && $order['create'] < $expire) {
@@ -264,7 +258,6 @@ class OrderLogic extends BaseService
         }
         $getOrder = $this->query->getOrderById($channels, $users, $params['order_id']);
         $list = [];
-        $refundReason = $this->query->getRefundReason(1);
         if (!empty($getOrder)) {
             $getOrder = $getOrder[0];
             $data = json_decode($getOrder['data'], true);
@@ -274,7 +267,7 @@ class OrderLogic extends BaseService
             }//超时订单状态为关闭.
 
             $list = OrderInit::factory($getOrder['type'])->apply('orderDetail', $getOrder, $data);
-            $list['refund']['reason_map'] = $refundReason;
+            $list['refund']['reason_map'] = $this->query->getRefundReason(1);
             $list['order_id'] = $getOrder['order'];
             $list['order_time'] = date('Y-m-d H:i:s', $getOrder['create']);
             $list['order_status'] = $getOrder['status'];
@@ -282,7 +275,6 @@ class OrderLogic extends BaseService
             $list['shop_id'] = encrypt($getOrder['shop_id'], 4);
             $list['shop_name'] = $data['sub_shop_name'];
             $list['contact'] = ['name' => $getOrder['contact'], 'tel' => $getOrder['mobile']];
-//            $list['coupon']                        =    0;
         }
         success($list);
     }

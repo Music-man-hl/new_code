@@ -40,17 +40,6 @@ class OrderQuery
 
     function getOrders($channels, $users, $limit, $status)
     {
-        /*if ($status) {
-            $where = 'AND o.status= ' . $status;
-        } else {
-            $where = '';
-        }
-        $field = 'o.`order`,o.`goods_code`,o.`create`,o.`sub_status`,o.`status`,o.`total`,o.`count`,o.`product`,o.`product_name`,o.`expire`,o.`type`,i.data,o.`refund_status`,o.`product`,o.`status`,o.`refund`,o.`rebate`,o.`sales_rebate`,o.`shop_id`';
-
-        $sql = 'SELECT ' . $field . ' FROM `order` o
-                   LEFT JOIN `order_info` i ON o.id=i.order_id
-                   WHERE o.channel=:channel  AND o.uid=:uid ' . $where . ' ORDER BY o.create DESC LIMIT ' . $limit['start'] . ',' . $limit['limit'];
-        return Db::query($sql, ['channel' => $channels['channel'], 'uid' => $users]);*/
 
         $orderQuery = Order::where('uid', $users)
             ->where('channel', $channels['channel']);
@@ -67,18 +56,6 @@ class OrderQuery
     //获取总数
     function getOrdersCount($channels, $users, $status)
     {
-        /*if (!empty($status)) {
-            $where = 'AND o.status= ' . $status;
-        } else {
-            $where = '';
-        }
-        $field = 'count(*) as count';
-
-        $sql = 'SELECT ' . $field . ' FROM `order` o 
-                   LEFT JOIN `order_info` i ON o.id=i.order_id
-                   WHERE o.channel=:channel  AND o.uid=:uid ' . $where . ' ';
-
-        return Db::query($sql, ['channel' => $channels['channel'], 'uid' => $users]);*/
 
         $orderQuery = Order::where('uid', $users)
             ->where('channel', $channels['channel']);
@@ -91,7 +68,7 @@ class OrderQuery
     function getOrderById($channels, $users, $order)
     {
 
-        $field = 'o.*,i.data,e.`remark`,e.assist_check_no,e.qrcode_img_url';
+        $field = 'o.*,i.data,e.*';
 
         $sql = 'SELECT ' . $field . ' FROM `order` o 
                    LEFT JOIN `order_info` i ON o.id=i.order_id
