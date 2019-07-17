@@ -36,7 +36,7 @@ class ProductLogic extends BaseService
         }
         $sub_shop = $this->query->getShopIdAndName($channelId, $shopId);
         if (empty($sub_shop)) error(40000, '没有找到门店');
-        if (!in_array($all_param['type'], [2, 5])) {
+        if (!in_array($all_param['type'], [2, 4, 5])) {
             error(40000, '参数不正确!');
         }
 
