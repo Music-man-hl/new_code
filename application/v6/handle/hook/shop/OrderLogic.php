@@ -17,7 +17,6 @@ use app\v6\model\Shop\OrderRetail;
 use app\v6\model\Shop\OrderTicket;
 use app\v6\model\Shop\OrderVoucher;
 use app\v6\model\Shop\Product;
-use app\v6\model\Shop\ProductRetailAddress;
 use app\v6\model\Shop\ProductRetailItem;
 use app\v6\model\Shop\ProductTicketBooking;
 use app\v6\model\Shop\ProductTicketItem;
@@ -28,6 +27,7 @@ use app\v6\Services\RabbitMQ;
 use Exception;
 use lib\Status;
 use think\db\Query;
+use think\facade\Request;
 use third\S;
 
 class OrderLogic
@@ -582,5 +582,20 @@ class OrderLogic
             error(40000, '该产品不支持优惠券！');
         }
         return $data['pid'];
+    }
+
+    public function complete()
+    {
+        $order =  Order::where('order',Request::param('order_id'))->find();
+        if (!$order){
+            return error(40400,'订单不存在');
+        }
+
+        $order->status = 8;
+        $order->ext->complete_time = NOW;
+        if (!$order->together('ext')->save()){
+            return error(50000,'订单操作失败');
+        }
+        return success();
     }
 }
