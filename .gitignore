@@ -6,3 +6,6 @@ thinkphp
 /vendor
 /runtime/
 /.DS_Store
+/data/assets/cert/
+/config/queue.php
+/public/1.php
