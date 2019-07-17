@@ -747,6 +747,7 @@ class DigitalLogic extends BaseService
 
             }
 
+            $lists = [];
             //格式化数据
             foreach ($countyLists as $k => $item) {
                 $area_data = [];
@@ -759,11 +760,18 @@ class DigitalLogic extends BaseService
                         'end' => isset($sites[$v['id']]['last']) ? $sites[$v['id']]['last'] : '',
                     ];
                 }
-                $list[] = [
+                $lists[$k] = [
                     'id' => $k,
                     'name' => $areas[$k],
                     'area_data' => $area_data,
                 ];
+            }
+            //重新排序
+            if(!empty($lists)){
+                $getAreaIds = array_column($areaLists, 'id');
+                foreach ($getAreaIds as $k) {
+                    if(isset($lists[$k])) $list[] = $lists[$k];
+                }
             }
 
         }
