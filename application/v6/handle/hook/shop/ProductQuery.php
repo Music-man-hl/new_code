@@ -9,6 +9,7 @@
 namespace app\v6\handle\hook\shop;
 
 
+use app\v6\model\Main\District;
 use app\v6\model\Shop\OrderRetail;
 use app\v6\model\Shop\Product;
 use app\v6\model\Shop\ProductPicture;
@@ -101,5 +102,15 @@ where p.`id`=:id AND p.`channel`=:channel AND p.`shop_id`=:shop_id AND p.`status
     static public function getAddress($id)
     {
         return ProductRetailAddress::field("id,lng,lat,province,city,county,address,contacts,mobile")->where(["id" => $id])->find();
+    }
+
+    static public function getAdName($id)
+    {
+        return District::where(["id" => $id])->value("name");
+    }
+
+    static public function getAdCode($id)
+    {
+        return District::where(["id" => $id])->value("adcode");
     }
 }
