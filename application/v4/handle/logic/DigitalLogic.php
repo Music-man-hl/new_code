@@ -701,9 +701,6 @@ class DigitalLogic extends BaseService
 //数字专线列表新结构
     public function area_lists($channels, $all_param)
     {
-        $shop = self::shop($all_param);
-        $shop_id = $shop['shop_id'];
-        $channel = $shop['channel'];
 
         $shop = self::shop($all_param);
         $shop_id = $shop['shop_id'];
@@ -716,8 +713,9 @@ class DigitalLogic extends BaseService
         $countyLists = $list = $getSites = $sites = [];
 
         //获取所有的专线
-        $countyAllLists = DigitalLine::field('area_id,name as title,id,cover')->where('channel', $channel)->where('shop_id', $shop_id)
-            ->where('status', self::LINE_STATUS_OK)->order(['sorts', 'id'])->select()->toArray();
+        $countyAllLists = DigitalLine::alias('l')->join([DigitalArea::getTable() => 'a'], 'a.id=l.area_id')->field('l.name as title,l.id,l.cover,l.area_id')
+            ->where('l.channel', $channel)->where('l.shop_id', $shop_id)->where('l.status', self::LINE_STATUS_OK)->where('a.status', self::AREA_STATUS_OK)
+            ->order(['l.sorts', 'l.id'])->select()->toArray();
 
         if (!empty($countyAllLists)) {
 
