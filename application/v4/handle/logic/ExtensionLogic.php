@@ -301,13 +301,13 @@ class ExtensionLogic extends BaseService
         $product = DistributionProduct::alias('dp')
             ->field('p.id,p.name,p.shop_id as sub_shop_id,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1])
+            ->where(['p.channel' => $channel, 'dp.status' => 1])
             ->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
         $count = DistributionProduct::alias('dp')
             ->field('p.id,p.name,p.shop_id as sub_shop_id,p.type,p.pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(Product::getTable() . ' p', 'dp.id = p.id')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1])
+            ->where(['p.channel' => $channel, 'dp.status' => 1])
             ->count();
         //获取用户等级信息
         $userInfo = DistributionUser::field('userid,level')->where(['userid' => $userId])->find();
