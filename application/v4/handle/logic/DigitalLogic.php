@@ -698,4 +698,77 @@ class DigitalLogic extends BaseService
 
     }
 
+//数字专线列表新结构
+    public function area_lists($channels, $all_param)
+    {
+
+        $shop = self::shop($all_param);
+        $shop_id = $shop['shop_id'];
+        $channel = $shop['channel'];
+
+        //获取所有地区
+        $areaLists = DigitalArea::field('name,id')->where('status', self::AREA_STATUS_OK)
+            ->where('channel', $channel)->order(['sorts', 'id'])->select()->toArray();
+
+        $countyLists = $list = $getSites = $sites = [];
+
+        //获取所有的专线
+        $countyAllLists = DigitalLine::alias('l')->join([DigitalArea::getTable() => 'a'], 'a.id=l.area_id')->field('l.name as title,l.id,l.cover,l.area_id')
+            ->where('l.channel', $channel)->where('l.shop_id', $shop_id)->where('l.status', self::LINE_STATUS_OK)->where('a.status', self::AREA_STATUS_OK)
+            ->order(['l.sorts', 'l.id'])->select()->toArray();
+
+        if (!empty($countyAllLists)) {
+
+            $areas = array_column($areaLists, 'name', 'id');
+
+            foreach ($countyAllLists as $v) {
+                $countyLists[$v['area_id']][] = $v;
+            }
+
+            if (!empty($countyLists)) {
+
+                //获取所有的站点
+                $getAllSites = DigitalSite::where('channel', $channel)->where('shop_id', $shop_id)
+                    ->field('line_id,name,sorts')->order(['line_id', 'sorts', 'id'])->select()->toArray(); //拉出所有站点
+
+                if (!empty($getAllSites)) {
+                    //获取所有站点，并得到第一站和最后一站
+                    foreach ($getAllSites as $v) {
+                        $getSites[$v['line_id']][] = $v;
+                    }
+
+                    foreach ($getSites as $k => $v) {
+                        $first = current($v);
+                        $last = end($v);
+                        $sites[$k] = ['first' => $first['name'], 'last' => $last['name']];
+                    }
+
+                }
+
+            }
+
+            //格式化数据
+            foreach ($countyLists as $k => $item) {
+                $area_data = [];
+                foreach ($item as $v) {
+                    $area_data[] = [
+                        'id' => encrypt($v['id'], Status::ENCRYPT_DIGITAL),
+                        'title' => $v['title'],
+                        'cover' => getBucket('digital_line', 'cover', $v['cover']),
+                        'start' => isset($sites[$v['id']]['first']) ? $sites[$v['id']]['first'] : '',
+                        'end' => isset($sites[$v['id']]['last']) ? $sites[$v['id']]['last'] : '',
+                    ];
+                }
+                $list[] = [
+                    'id' => $k,
+                    'name' => $areas[$k],
+                    'area_data' => $area_data,
+                ];
+            }
+
+        }
+
+        success(['list' => $list]);
+    }
+
 }
