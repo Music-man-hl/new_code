@@ -338,7 +338,7 @@ class ExtensionLogic extends BaseService
         $query = DistributionProduct::alias('dp')
             ->field('p.id,p.name,p.shop_id as sub_shop_id,dp.type,p.cover as pic,p.price,dp.rate_type,dp.rate,dp.rate_all')
             ->leftJoin(ProductUnion::getTable() . ' p', 'dp.id = p.id AND dp.type = p.type')
-            ->where(['dp.channel' => $channel, 'dp.status' => 1, 'p.status' => 1]);
+            ->where(['p.channel' => $channel, 'dp.status' => 1, 'p.status' => 1]);
 
         $product = $query->order("dp.create_time DESC")
             ->limit(($page - 1) * 5, 5)->select();
