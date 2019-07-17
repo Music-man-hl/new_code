@@ -293,6 +293,14 @@ class OrderLogic extends BaseService
         }
     }
 
+    public function complete($channels, $params)
+    {
+        if (!isset($params['order_id']) || !isset($params['type'])) {
+            error(40000, '参数不全！');
+        }
+        OrderInit::factory($params['type'])->apply('complete', $params);
+    }
+
     //订单申请退款
     public function refund($channels, $params, $users)
     {

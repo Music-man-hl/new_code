@@ -19,7 +19,7 @@ class AddressLogic extends BaseService
 
     public function index()
     {
-        return UserAddress::where('user_id', $this->request->user)->order('update', 'desc')->select();
+        return UserAddress::where('user_id', $this->request->user)->order('update_time', 'desc')->select();
     }
 
     public function create()
@@ -33,7 +33,6 @@ class AddressLogic extends BaseService
             'city' => $this->request->city,
             'district' => $this->request->district,
             'address' => $this->request->address,
-            'postcode' => $this->request->postcode,
         ];
         $result = UserAddress::create($data);
         if (!$result) {

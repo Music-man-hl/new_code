@@ -6,5 +6,5 @@ use app\v6\model\BaseModel;
 
 class UserAddress extends BaseModel
 {
-    //
+    public $autoWriteTimestamp = 'timestamp';
 }

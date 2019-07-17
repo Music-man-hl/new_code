@@ -23,7 +23,8 @@ class Order extends Base
 	       'list'   => ['type'=>'GET'  , 'lived' => true ],
 	       'lists'   => ['type'=>'GET'  , 'lived' => true ],
 	       'refund'  => ['type'=>'POST' , 'lived' => true ],
-	       'booking' => ['type'=>'POST' , 'lived' => true ]
+	       'booking' => ['type'=>'POST' , 'lived' => true ],
+	       'complete' => ['type'=>'PUT' , 'lived' => true ],
 	   ];
 	}
 
@@ -55,6 +56,12 @@ class Order extends Base
     public function booking()
     {
         OrderLogic::service()->booking($this->channels,$this->all_param,$this->users);
+    }
+
+    //申请退款
+    public function complete()
+    {
+        OrderLogic::service()->complete($this->channels,$this->all_param,$this->users);
     }
 
     //申请退款
