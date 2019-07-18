@@ -11,10 +11,8 @@ use app\v6\model\Shop\OrderExt;
 use app\v6\model\Shop\OrderInfo;
 use app\v6\model\Shop\OrderPaylog;
 use app\v6\model\Shop\OrderRetail;
-use app\v6\model\Shop\OrderTicket;
 use app\v6\model\Shop\Product;
 use app\v6\model\Shop\ProductRetailItem;
-use app\v6\model\Shop\ProductTicketItem;
 use app\v6\model\Shop\User;
 use app\v6\model\Shop\UserAddress;
 use Exception;
@@ -258,8 +256,8 @@ class OrderLogic
 
     public static function payCreateVild($orders)
     {
-        $itemId = OrderTicket::where('order', $orders['order'])->value('item_id');
-        $item = ProductTicketItem::get($itemId);
+        $itemId = OrderRetail::where('order', $orders['order'])->value('item_id');
+        $item = ProductRetailItem::get($itemId);
         if (empty($item)) {
             error(50000, '此产品已经发生变化，请重新下单');
         }
