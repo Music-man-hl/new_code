@@ -256,7 +256,7 @@ class OrderLogic
 
     public static function payCreateVild($orders)
     {
-        $itemId = OrderRetail::where('order', $orders['order'])->value('item_id');
+        $itemId = OrderRetail::where('order', $orders['order'])->value('product_item_id');
         $item = ProductRetailItem::get($itemId);
         if (empty($item)) {
             error(50000, '此产品已经发生变化，请重新下单');
