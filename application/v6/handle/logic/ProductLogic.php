@@ -115,16 +115,4 @@ class ProductLogic extends BaseService
 
     }
 
-    //券日历列表
-
-    private function formate_bed_type($bed_type, $id = 0)
-    {
-        foreach ($bed_type as $item) {
-            if ($item['id'] == $id) $list = $item['name'];
-
-        }
-        return $list;
-    }
-
-
 }
