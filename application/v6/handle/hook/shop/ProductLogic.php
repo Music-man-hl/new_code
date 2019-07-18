@@ -140,7 +140,7 @@ class ProductLogic
                 'level' => $level,
                 'retail_price' => $tttt['sale_price'],
                 'retail_stock' => $total > 0 ? $total : 0,
-                'id' => encrypt($tttt['id'], 2),
+                'id' => encrypt($tttt['id'], 1),
                 'desc' => $tttt['intro'],
             ];
         }
