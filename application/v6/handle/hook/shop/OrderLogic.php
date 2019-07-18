@@ -91,13 +91,12 @@ class OrderLogic
         }
 
         //校验库存和价格是否一致
-        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) != $data['total_price']) {
+        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) + $data['transport_fee'] != $data['total_price']) {
             error(40000, '价格不正确');
         }
 
 
         $userInfo = User::get($data['user_id']);
-//        $takeAddress = ProductRetailAddress::where('pid',$product->id)->find();
 
         $orderData = [
             'channel' => $data['channel'],
@@ -198,10 +197,12 @@ class OrderLogic
             Order::rollback();
             return error(50000, '订单生产失败');
         }
+        if (isset($data['receive_address']['id'])) {
+            $userAddress = UserAddress::get($data['receive_address']['id']);
+            $userAddress->update_time = NOW;
+            $userAddress->save();
+        }
 
-        $userAddress = UserAddress::get($data['receive_address']['id']);
-        $userAddress->update_time = NOW;
-        $userAddress->save();
         return true;
     }
 
