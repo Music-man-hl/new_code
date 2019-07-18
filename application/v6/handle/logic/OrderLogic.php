@@ -80,7 +80,7 @@ class OrderLogic extends BaseService
         } elseif ($params['type'] == '2') {
             $data['ticket_id'] = encrypt($params['id'], 1, false);
         } elseif ($params['type'] == 4) {
-//            $data['id'] = encrypt($params['id'], 1, false);
+            $data['id'] = encrypt($params['id'], 1, false);
         } else {
             error(40000, '参数不正确!');
         }

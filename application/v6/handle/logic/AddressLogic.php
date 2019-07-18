@@ -19,7 +19,8 @@ class AddressLogic extends BaseService
 
     public function index()
     {
-        return UserAddress::where('user_id', $this->request->user)->order('update_time', 'desc')->select();
+        $result = UserAddress::where('user_id', $this->request->user)->order('update_time', 'desc')->select();
+        return success($result);
     }
 
     public function create()
