@@ -292,7 +292,7 @@ class OrderLogic
         }
 
         $count = $getOrder['count'];//更新used
-        $itemId = $orderItem['item_id'];//券id
+        $itemId = $orderItem['product_item_id'];//券id
         $productId = $getOrder['product'];
 
         //查询优惠券
