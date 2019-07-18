@@ -4,7 +4,6 @@ namespace app\v6\handle\hook\shop;
 
 use app\v6\model\Main\InformTpl;
 use app\v6\model\Main\Shop;
-use app\v6\model\MpOrder\OrderTask;
 use app\v6\model\Shop\Coupon;
 use app\v6\model\Shop\CouponCode;
 use app\v6\model\Shop\InformMsg;
@@ -18,12 +17,10 @@ use app\v6\model\Shop\OrderTicket;
 use app\v6\model\Shop\OrderVoucher;
 use app\v6\model\Shop\Product;
 use app\v6\model\Shop\ProductRetailItem;
-use app\v6\model\Shop\ProductTicketBooking;
 use app\v6\model\Shop\ProductTicketItem;
 use app\v6\model\Shop\ProductVoucherItem;
 use app\v6\model\Shop\User;
 use app\v6\model\Shop\UserAddress;
-use app\v6\Services\RabbitMQ;
 use Exception;
 use lib\Status;
 use think\db\Query;
@@ -272,7 +269,6 @@ class OrderLogic
         return true;
     }
 
-    //发送短信
 
     public static function pay($getOrder, $param)
     {
@@ -294,14 +290,14 @@ class OrderLogic
         }
 
         //查询订单中的券和产品
-        $orderTickets = OrderTicket::where('order_id', $order_id)->find();
-        if (!$orderTickets) {
-            OrderPayLog::addLog($channel, $order, 'order_ticket 没有找到');
+        $orderItem = OrderRetail::where('order_id', $order_id)->find();
+        if (!$orderItem) {
+            OrderPayLog::addLog($channel, $order, 'item产品没有找到');
             return false;
         }
 
         $count = $getOrder['count'];//更新used
-        $itemId = $orderTickets['item_id'];//券id
+        $itemId = $orderItem['item_id'];//券id
         $productId = $getOrder['product'];
 
         //查询优惠券
@@ -313,7 +309,7 @@ class OrderLogic
         //Db::startTrans();
         try {
             $res = Order::where('id', $order_id)->update([
-                'status' => $getOrder['goods_code'] ? $order_status : Status::ORDER_CONFIRM,
+                'status' => $order_status,
                 'pay_type' => $pay_type,
                 'pay_time' => NOW,
                 'update' => NOW,
@@ -329,34 +325,18 @@ class OrderLogic
                 'total_fee' => $total_fee
             ];
 
-            if (!$getOrder['goods_code']) {
-                //不对接
-                $res = OrderTicket::where('order_id', $order_id)->update(['status' => Status::TICKET_CONFIRM, 'update' => NOW]);
-                if (!$res) {
-                    throw new Exception('order_ticket 更新失败!');
-                }
-                $order_ext_update['confirm_time'] = NOW;
-                $order_ext_update['assist_check_no'] = NOW . mt_rand(10000, 99999);//不对接的辅助检票码
-            }
-
             $res = OrderExt::where('order_id', $order_id)->update($order_ext_update);
             if (!$res) {
                 throw new Exception('order_ext 更新失败');
             }
 
             //接下来更新产品和券
-            $res = ProductTicketItem::where('id', $itemId)->inc('sales', $count)->update();
+            $res = ProductRetailItem::where('id', $itemId)->inc('sales', $count)->update();
             if (!$res) {
-                throw new Exception('product_ticket_item 更新失败');
-            }
-            //更新产品库存
-            $res = ProductTicketBooking::where('item_id', $itemId)->where('date', $orderTickets['checkin'])
-                ->inc('used', $count)->update();
-            if (!$res) {
-                throw new Exception('product_ticket_booking 更新失败');
+                throw new Exception('product_retail_item 更新失败');
             }
             // 更新产品库存
-            $res = Product::where('id', $productId)->inc('sales', 1)->update();
+            $res = Product::where('id', $productId)->inc('sales', $count)->update();
 
             if (!$res) {
                 throw new Exception('product 更新失败');
@@ -388,69 +368,7 @@ class OrderLogic
             S::log(exceptionMessage($e), 'error'); // 上线取消
             return false;
         }
-        try {
-            if ($getOrder['goods_code']) {
-                self::pushToTask($getOrder);
-                S::log("MQ发送 order:$order", 'info');
-                RabbitMQ::service()->publish($order, config('rabbitmq.order_exchange'), config('rabbitmq.order_routing_key'));
-            } else {
-                //发短信
-                self::sendMessage($getOrder);
-            }
-        } catch (Exception $e) {
-            S::log(exceptionMessage($e), 'error');
-            return false;
-        }
         return true;
-    }
-
-    //对接下单数据放入order_task表
-
-    public static function pushToTask(Order $order)
-    {
-//        S::log("pushToTask1: ", 'warn');
-        $data = [
-            'order' => $order->order,
-            'channel' => $order->channel,
-            'shop_id' => $order->shop_id,
-            'status' => 0,
-            'pms_id' => $order->pms_id,
-            'create' => time(),
-        ];
-        $orderParams = [
-            'orderPrice' => $order->total,
-            'linkName' => $order->contact,
-            'linkMobile' => $order->mobile,
-            'orderCode' => $order->order,
-        ];
-        $ticketParams = [];
-        $people = [];
-
-        foreach ($order->ticket as $ticket) {
-            if (!empty($ticket->people)) {
-                $people = $ticket->people;
-            }
-            $ticketParams[] = [
-                'orderCode' => $ticket->item_order,
-                'price' => bcdiv($order->total, $order->count, 2),
-                'quantity' => 1,
-                'totalPrice' => bcdiv($order->total, $order->count, 2),
-                'occDate' => date('Y-m-d', $ticket->checkin),
-                'goodsCode' => $order->goods_code,
-                'goodsName' => $order->product_name,
-                'credential' => [],
-            ];
-        }
-//        MyLog::warn(var_export($people,true));
-        if (!empty($people)) {
-            $orderParams['certificateNo'] = $people[0]->id_card;
-            $orderParams['certificateType'] = "id";
-        }
-
-        $orderParams ['ticketOrder'] = $ticketParams;
-        $data['order_params'] = json_encode($orderParams);
-
-        return OrderTask::create($data);
     }
 
 
@@ -586,15 +504,15 @@ class OrderLogic
 
     public function complete()
     {
-        $order =  Order::where('order',Request::param('order_id'))->find();
-        if (!$order){
-            return error(40400,'订单不存在');
+        $order = Order::where('order', Request::param('order_id'))->find();
+        if (!$order) {
+            return error(40400, '订单不存在');
         }
 
         $order->status = 8;
         $order->ext->complete_time = NOW;
-        if (!$order->together('ext')->save()){
-            return error(50000,'订单操作失败');
+        if (!$order->together('ext')->save()) {
+            return error(50000, '订单操作失败');
         }
         return success();
     }
