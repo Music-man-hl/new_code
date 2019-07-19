@@ -28,9 +28,11 @@ class OrderLogic
         if (empty($data['id']) || !isset($data['count']) || !isset($data['total_price']) || !isset($data['total_fee'])) {
             error(40000, '参数不全');
         }
-        $allow = ['channel', 'shop_id', 'id', 'order', 'total_price', 'total_fee', 'count', 'user_id',
+        $allow = [
+            'channel', 'shop_id', 'id', 'order', 'total_price', 'total_fee', 'count', 'user_id',
             'transport_type', 'transport_fee', 'receive_address', 'take_address', 'coupon_id', 'extension_user', 'take_contact',
-            'remark', 'extension_user',];
+            'remark', 'extension_user',
+        ];
         $data = filterData($data, $allow);
 
         //校验参数
@@ -137,6 +139,7 @@ class OrderLogic
             'shop_name' => $shop->getChannel->name,
             'sub_shop_name' => $shop['name'],
             'shop_group' => $shop->getChannel->group,
+            'is_refund' => $product['is_refund'],
         ];
         try {
             $order = Order::create($orderData);
@@ -214,9 +217,10 @@ class OrderLogic
         }
 
         $refund = false;
-        if (in_array($order['status'], [Status::ORDER_PAY, Status::ORDER_CONFIRM]) &&
+        if (
+            in_array($order['status'], [Status::ORDER_PAY, Status::ORDER_CONFIRM]) &&
             in_array($order['refund_status'], [Status::REFUND_DEFAULT, Status::REFUND_REFUSE]) &&
-            $data['refund_type'] == 1
+            $data['is_refund'] == 1
         ) {
             $refund = true;
         }
@@ -229,12 +233,12 @@ class OrderLogic
             "product_item_name" => $data['product_item_name'],
             "product_item_price" => floatval($order['total'] / $order['count']),
             "order_count" => $order['count'], // 订单件数
-            "order_total" => floatval($order['total']),//总价
+            "order_total" => floatval($order['total']), //总价
             "transport_type" => $orderRetailData['transport_type'],
             "transport_fee" => $orderRetailData['transport_fee'],
             "remark" => $order['remark'],
-            "coupon" => $order['rebate'],//使用优惠券金额
-            "pay_total" => floatval(add($order['total'], -$order['rebate'], -$order['sales_rebate'])),//实际支付金额
+            "coupon" => $order['rebate'], //使用优惠券金额
+            "pay_total" => floatval(add($order['total'], -$order['rebate'], -$order['sales_rebate'])), //实际支付金额
             "product_id" => encrypt($order['product'], 1),
             "product_cover" => picture($data['bucket'], $data['cover']),
             'product_desc' => $data['product_desc'] ?? '',
@@ -267,13 +271,13 @@ class OrderLogic
 
     public static function pay($getOrder, $param)
     {
-        $order_status = Status::ORDER_PAY;//支付成功
-        $pay_type = Status::PAY_WEIXIN;//微信支付
+        $order_status = Status::ORDER_PAY; //支付成功
+        $pay_type = Status::PAY_WEIXIN; //微信支付
 
-        $channel = $getOrder['channel'];//渠道
-        $uid = $getOrder['uid'];//用户id
+        $channel = $getOrder['channel']; //渠道
+        $uid = $getOrder['uid']; //用户id
 
-        $order_id = $getOrder['id'];//订单id
+        $order_id = $getOrder['id']; //订单id
         $order = $getOrder['order'];
 
         $total = add($getOrder['total'], -$getOrder['rebate'], -$getOrder['sales_rebate']); //总价格
@@ -291,8 +295,8 @@ class OrderLogic
             return false;
         }
 
-        $count = $getOrder['count'];//更新used
-        $itemId = $orderItem['product_item_id'];//券id
+        $count = $getOrder['count']; //更新used
+        $itemId = $orderItem['product_item_id']; //券id
         $productId = $getOrder['product'];
 
         //查询优惠券
@@ -359,7 +363,7 @@ class OrderLogic
         } catch (Exception $e) {
             //Db::rollback();
 
-            OrderPayLog::addLog($channel, $order, $e->getMessage());//记录错误信息
+            OrderPayLog::addLog($channel, $order, $e->getMessage()); //记录错误信息
             S::log(exceptionMessage($e), 'error'); // 上线取消
             return false;
         }
