@@ -94,7 +94,7 @@ class OrderLogic
         }
 
         //校验库存和价格是否一致
-        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) + $transportFee != $data['total_price']) {
+        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) + $transportFee - $data['coupon_price'] != $data['total_price']) {
             error(40000, '价格不正确');
         }
 
@@ -394,12 +394,12 @@ class OrderLogic
     public static function getProductId($id)
     {
         $id = encrypt($id, 1, false);
-        $data = OrderQuery::getProductId($id);
-        $product = OrderQuery::getProductById($data['pid']);
-        if ($product['is_coupons'] == '0') {
+        $pid = ProductRetailItem::where(['id' => $id])->value('pid');
+        $is_coupons = Product::where(['id' => $pid])->value('is_coupons');
+        if (!$is_coupons) {
             error(40000, '该产品不支持优惠券！');
         }
-        return $data['pid'];
+        return $pid;
     }
 
     public function complete()

@@ -5,8 +5,6 @@ namespace app\v6\handle\hook\shop;
 
 use app\v6\model\Main\Shop;
 use app\v6\model\Shop\MessageSend;
-use app\v6\model\Shop\Product;
-use app\v6\model\Shop\ProductTicketItem;
 use lib\Status;
 use third\S;
 
@@ -48,13 +46,4 @@ class OrderQuery
         return MessageSend::insert($msg);
     }
 
-    public static function getProductId($id)
-    {
-        return ProductTicketItem::where(['id' => $id])->field('pid')->find();
-    }
-
-    public static function getProductById($id)
-    {
-        return Product::where(['id' => $id])->field('is_coupons')->find();
-    }
 }

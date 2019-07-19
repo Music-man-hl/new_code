@@ -101,7 +101,6 @@ class OrderLogic extends BaseService
 
     private function coupon($coupon, $user, $product, $price, $channel, $type)
     {
-//        $channel        = 1001;
         $couponData = $this->query->getCoupon($coupon, $user, $channel);
         if (empty($couponData) || $couponData['status'] == '1' || $couponData['lock_time'] > NOW) {
             error(40000, '券不可用!');
