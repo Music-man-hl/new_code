@@ -106,7 +106,7 @@ class OrderLogic
             'shop_id' => $data['shop_id'],
             'order' => $data['order'],
             'pms_id' => $product['pms_id'],
-            'total' => $data['total_price'],  //总价
+            'total' => $data['total_fee'],  //总价
             'count' => $data['count'],        //数量
             'coupon_id' => $data['coupon'] ?? 0,
             'rebate' => $data['coupon_price'] ?? 0,
