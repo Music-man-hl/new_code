@@ -29,9 +29,9 @@ class OrderLogic
             error(40000, '参数不全');
         }
         $allow = [
-            'channel', 'shop_id', 'id', 'order', 'total_price', 'total_fee', 'count', 'user_id',
-            'transport_type', 'transport_fee', 'receive_address', 'take_address', 'coupon_id', 'extension_user', 'take_contact',
-            'remark', 'extension_user'
+            'channel', 'shop_id', 'id', 'order', 'total_price', 'total_fee', 'count', 'user_id', 'transport_type', 'transport_fee',
+            'receive_address', 'take_address', 'coupon_id', 'coupon_price', 'extension_user', 'take_contact', 'remark',
+            'extension_user'
         ];
         $data = filterData($data, $allow);
 
@@ -94,7 +94,7 @@ class OrderLogic
         }
 
         //校验库存和价格是否一致
-        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) + $transportFee - $data['coupon_price'] != $data['total_price']) {
+        if (bccomp((bcmul($productRetailItem['sale_price'], $data['count'], 2) + $transportFee - $data['coupon_price']), $data['total_price'])) {
             error(40000, '价格不正确');
         }
 
@@ -232,7 +232,7 @@ class OrderLogic
             "order_id" => $order['order'],
             "order_status" => $order['status'],
             "receive_address" => $orderRetailData['receive_address'],
-            "take_address" => $orderRetailData['receive_address'],
+            "take_address" => $orderRetailData['take_address'],
             "product_name" => $order['product_name'],
             "product_item_name" => $data['product_item_name'],
             "product_item_price" => floatval($order['total'] / $order['count']),
