@@ -106,7 +106,7 @@ class OrderLogic
             'shop_id' => $data['shop_id'],
             'order' => $data['order'],
             'pms_id' => $product['pms_id'],
-            'total' => $data['total_fee'],  //总价
+            'total' => $data['total_fee'] + $data['transport_fee'],  //总价
             'count' => $data['count'],        //数量
             'coupon_id' => $data['coupon'] ?? 0,
             'rebate' => $data['coupon_price'] ?? 0,
@@ -235,7 +235,7 @@ class OrderLogic
             "take_address" => $orderRetailData['take_address'],
             "product_name" => $order['product_name'],
             "product_item_name" => $data['product_item_name'],
-            "product_item_price" => floatval($order['total'] / $order['count']),
+            "product_item_price" => $data['sale_price'],
             "order_count" => $order['count'], // 订单件数
             "order_total" => floatval($order['total']), //总价
             "transport_type" => $orderRetailData['transport_type'],
