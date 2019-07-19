@@ -61,6 +61,7 @@ class OrderLogic extends BaseService
         $data['order'] = $order;
         $data['channel'] = $channel;
         $data['shop_id'] = $shop_id;
+        $data['coupon_price'] = 0;
 
         //使用了优惠券判断优惠券的状态
         if (isset($params['coupon_id']) && !empty($params['coupon_id'])) {
