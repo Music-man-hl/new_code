@@ -31,7 +31,7 @@ class OrderLogic
         $allow = [
             'channel', 'shop_id', 'id', 'order', 'total_price', 'total_fee', 'count', 'user_id',
             'transport_type', 'transport_fee', 'receive_address', 'take_address', 'coupon_id', 'extension_user', 'take_contact',
-            'remark', 'extension_user',
+            'remark', 'extension_user'
         ];
         $data = filterData($data, $allow);
 
