@@ -51,4 +51,9 @@ class Product extends BaseModel
         return $this->belongsToMany(Coupon::class, 'coupon_product', 'coupon_id', 'product_id');
     }
 
+    public function retailExt()
+    {
+        return $this->hasOne(ProductRetailExt::class, 'pid', 'id');
+    }
+
 }

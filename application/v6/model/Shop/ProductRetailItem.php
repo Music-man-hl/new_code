@@ -23,7 +23,7 @@ class ProductRetailItem extends BaseModel
     {
         $level = [$data['level1'], $data['level2']];
         $standard = ProductRetailStandard::whereIn('id', $level)->select();
-        return $name = $standard[0]->title . ' ' . $standard[1]->title;
+        return $name = $standard[0]->value . ' ' . $standard[1]->value;
     }
 
 }

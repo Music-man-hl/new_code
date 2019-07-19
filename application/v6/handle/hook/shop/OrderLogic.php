@@ -54,14 +54,18 @@ class OrderLogic
             return error(40000, '产品不存在！');
         }
 
+        $product = $productRetailItem->product;
+
         $allowTransportType = [$productRetailItem->ext->is_self_mention ? 2 : 0, $productRetailItem->ext->is_transport ? 1 : 0];
         if (!in_array($data['transport_type'], $allowTransportType)) {
             return error(40000, '发货类型不正确');
         }
-        if ($data['transport_type'] == 1 && !$data['receive_address']) {
-            return error(40000, '收货地址不能为空');
-        }
-        if ($data['transport_type'] == 2) {
+        if ($data['transport_type'] == 1) {
+            if (!$data['receive_address']) {
+                return error(40000, '收货地址不能为空');
+            }
+            $transportFee = $product->retailExt->transport_fee;
+        } else {
             if (!$data['take_contact']) {
                 return error(40000, '自提联系人不能为空');
             }
@@ -69,9 +73,8 @@ class OrderLogic
             if (!$takeContact) {
                 return error(40800, '联系人不存在!');
             }
+            $transportFee = 0;
         }
-
-        $product = $productRetailItem->product;
 
         if ($data['count'] < $product['min'] || $data['count'] > $product['max']) {
             error(40000, '购买数量有误！');
@@ -91,7 +94,7 @@ class OrderLogic
         }
 
         //校验库存和价格是否一致
-        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) + $data['transport_fee'] != $data['total_price']) {
+        if (bcmul($productRetailItem['sale_price'], $data['count'], 2) + $transportFee != $data['total_price']) {
             error(40000, '价格不正确');
         }
 
@@ -225,6 +228,7 @@ class OrderLogic
             $refund = true;
         }
         $detail = [
+            "type" => $order['type'],
             "order_id" => $order['order'],
             "order_status" => $order['status'],
             "receive_address" => $orderRetailData['receive_address'],
