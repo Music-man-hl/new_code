@@ -21,9 +21,13 @@ class ProductRetailItem extends BaseModel
 
     public function getNameAttr($value, $data)
     {
+        $name = '';
         $level = [$data['level1'], $data['level2']];
         $standard = ProductRetailStandard::whereIn('id', $level)->select();
-        return $name = $standard[0]->value . ' ' . $standard[1]->value;
+        foreach ($standard as $item) {
+            $name .= $item->value . ' ';
+        }
+        return $name;
     }
 
 }
