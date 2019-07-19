@@ -66,7 +66,7 @@ class ProductLogic
             if ($address) {
                 $address['province_name'] = ProductQuery::getAdName($address['province']);
                 $address['city_name'] = ProductQuery::getAdName($address['city']);
-                $address['county_name'] = ProductQuery::getAdName($address['county']);
+                $address['district_name'] = ProductQuery::getAdName($address['county']);
                 $address['province_adcode'] = ProductQuery::getAdCode($address['province']);
                 $address['city_adcode'] = ProductQuery::getAdCode($address['city']);
                 $address['county_adcode'] = ProductQuery::getAdCode($address['county']);
