@@ -213,7 +213,7 @@ class OrderLogic extends BaseService
                     "cover" => picture($data['bucket'], $data['cover']),
                     "shop_name" => $shopName[$order['shop_id']],
                     "product_name" => $order['product_name'],
-                    "name" => isset($data['name']) ? $data['name'] : '',
+                    "name" => $data['name'] ?? $data['product_item_name'] ?? '',
                     "expire" => isset($data['checkin']) ? date('Y-m-d', $data['checkin']) . "至" . date('Y-m-d', $data['checkout']) : '', // 入住有效期
                     'product_id' => encrypt($order['product'], $type[$order['type']]),
                     "is_refundable" => $refund, // 是否可退款
