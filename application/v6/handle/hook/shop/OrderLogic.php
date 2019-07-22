@@ -143,6 +143,7 @@ class OrderLogic
             'sub_shop_name' => $shop['name'],
             'shop_group' => $shop->getChannel->group,
             'is_refund' => $product['is_refund'],
+            'pay_total' => bcsub($data['total_price'], $transportFee)
         ];
         try {
             $order = Order::create($orderData);
@@ -155,6 +156,7 @@ class OrderLogic
                 'order_id' => $order->id,
                 'channel' => $data['channel'],
                 'order' => $data['order'],
+                'remark' => $data['remark']
             ]);
             if (empty($ext)) {
                 Order::rollback();
@@ -377,12 +379,9 @@ class OrderLogic
 
     public static function refund($order, $user)
     {
-        $data = OrderQuery::getTicketByOrderId($order['order'], '', $user);
-        $status_vaild = [Status::TICKET_DEFAUT, Status::TICKET_CONFIRM];
-        foreach ($data as $v) {
-            if (!in_array($v['ticket_status'], $status_vaild)) {
-                error(40000, '券状态不允许退款');
-            }
+        $statusValid = [3, 5];
+        if (!in_array($order['status'], $statusValid)) {
+            error(40000, '状态不允许退款');
         }
     }
 

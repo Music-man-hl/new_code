@@ -314,7 +314,7 @@ class OrderLogic extends BaseService
         }
         $data = json_decode($getOrder[0]['data'], true);
         $getOrder = $getOrder[0];
-        $return = OrderInit::factory($getOrder['type'])->apply('refund', $getOrder, $users);
+        OrderInit::factory($getOrder['type'])->apply('refund', $getOrder, $users);
         if (!$this->checkRefundable($getOrder)) {
             error(40000, '此订单状态不允许退款');
         }
