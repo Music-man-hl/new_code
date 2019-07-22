@@ -235,15 +235,15 @@ class OrderLogic extends BaseService
         switch ($order['type']) {
             case Status::CALENDAR_PRODUCT:
             case Status::SUIT_PRODUCT:
-            case Status::MARKET_PRODUCT:
             case Status::VOUCHER_PRODUCT:
                 if (($order['status'] == 3 || $order['status'] == 6) && ($order['refund_status'] == 0 || $order['refund_status'] == 2)) {
                     $is_refundable = true;
                 }
                 break;
+            case Status::MARKET_PRODUCT:
             case Status::TICKET_PRODUCT:
-                if (\in_array($order['status'], [Status::ORDER_PAY, Status::ORDER_CONFIRM])
-                    && \in_array($order['refund_status'], [Status::REFUND_DEFAULT, Status::REFUND_REFUSE])) {
+                if (in_array($order['status'], [Status::ORDER_PAY, Status::ORDER_CONFIRM])
+                    && in_array($order['refund_status'], [Status::REFUND_DEFAULT, Status::REFUND_REFUSE])) {
                     $is_refundable = true;
                 }
                 break;
