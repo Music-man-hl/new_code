@@ -233,15 +233,11 @@ class OrderLogic
             "type" => $order['type'],
             "order_id" => $order['order'],
             "order_status" => $order['status'],
-            "receive_address" => $orderRetailData['receive_address'],
-            "take_address" => $orderRetailData['take_address'],
             "product_name" => $order['product_name'],
             "product_item_name" => $data['product_item_name'],
             "product_item_price" => $data['sale_price'],
             "order_count" => $order['count'], // 订单件数
             "order_total" => floatval($order['total']), //总价
-            "transport_type" => $orderRetailData['transport_type'],
-            "transport_fee" => $orderRetailData['transport_fee'],
             "remark" => $order['remark'],
             "coupon" => $order['rebate'], //使用优惠券金额
             "pay_total" => floatval(add($order['total'], -$order['rebate'], -$order['sales_rebate'])), //实际支付金额
@@ -249,8 +245,6 @@ class OrderLogic
             "product_cover" => picture($data['bucket'], $data['cover']),
             'product_desc' => $data['product_desc'] ?? '',
             'product_item_id' => $data['product_item_id'],
-
-            "take_contact" => $orderRetailData['take_contact'],
             "refund" => [
                 'is_refundable' => $refund,
                 'status' => $order['refund_status'],
@@ -259,7 +253,7 @@ class OrderLogic
             "complete_time" => max($order['confirm_time'] + (14 * 24 * 60 * 60) - NOW, 0),
         ];
 
-        return $detail;
+        return array_merge($detail, $orderRetailData);
     }
 
     //支付回调
