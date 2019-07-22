@@ -253,7 +253,7 @@ class OrderLogic
             "complete_time" => max($order['confirm_time'] + (14 * 24 * 60 * 60) - NOW, 0),
         ];
 
-        return array_merge($detail, $orderRetailData);
+        return array_merge($detail, $orderRetailData->toArray());
     }
 
     //支付回调
