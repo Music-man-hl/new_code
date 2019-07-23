@@ -367,9 +367,18 @@ class ExtensionLogic extends BaseService
                         break;
                     case 2:
                         $product[$key]['rate'] = ($rate['rate2'] ?? 0);
+                        if ($product[$key]['rate'] == 0) {
+                            $product[$key]['rate'] = $rate['rate1'] ?? 0;
+                        }
                         break;
                     case 3:
                         $product[$key]['rate'] = ($rate['rate3'] ?? 0);
+                        if ($product[$key]['rate'] == 0) {
+                            $product[$key]['rate'] = $rate['rate2'] ?? 0;
+                        }
+                        if ($product[$key]['rate'] == 0) {
+                            $product[$key]['rate'] = $rate['rate1'] ?? 0;
+                        }
                         break;
                 }
                 $product[$key]['predict'] = round($value['price'] * ($product[$key]['rate'] / 100), 2);
