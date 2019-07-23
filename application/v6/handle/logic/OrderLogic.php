@@ -383,7 +383,7 @@ class OrderLogic extends BaseService
     {
         $ret = OrderInit::factory($order['type'])->apply('smsApplyRefund', $order);
         if ($ret) {
-            $res = S::exec($order['order'], 2);
+            $res = S::exec($order, 2);
             S::log('退款申请 - 及时发送短信结果:' . json_encode($res, JSON_UNESCAPED_UNICODE));
         }
     }

@@ -96,9 +96,9 @@ class S
     // 执行exec
     static function exec($order, $msgType = null)
     {
-        $channel = Order::where('order', $order)->value('channel');
+        $channel = Order::where('order', $order['order'])->value('channel');
         $data = [
-            'order' => $order, 'key' => config('web.validate_key') . APP_EVN, 'channel' => $channel,
+            'order' => $order['order'], 'key' => config('web.validate_key') . APP_EVN, 'channel' => $channel,
             'type' => $order['type'],
             'msg_type' => $msgType
         ];
