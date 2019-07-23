@@ -380,11 +380,6 @@ class OrderLogic
         }
     }
 
-    public static function smsApplyRefund($order)
-    {
-        return OrderQuery::smsApplyRefund($order);
-    }
-
     public static function getProductId($id)
     {
         $id = encrypt($id, 1, false);
@@ -409,5 +404,15 @@ class OrderLogic
             return error(50000, '订单操作失败');
         }
         return success();
+    }
+
+    public static function smsApplyRefund($order)
+    {
+        return true;
+    }
+
+    public static function smsPaySuccess($order)
+    {
+        return true;
     }
 }

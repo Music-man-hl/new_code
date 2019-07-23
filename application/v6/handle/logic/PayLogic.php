@@ -249,7 +249,7 @@ class PayLogic extends BaseService
             //}
             S::log('执行短信操作 - 订单号:' . $getOrder['order'] . ' 结果:' . var_export($ret, true));
             if ($ret) {
-                $res = S::exec($getOrder['order']);
+                $res = S::exec($getOrder['order'], 1);
                 S::log('支付成功 - 及时发送短信结果:' . json_encode($res, JSON_UNESCAPED_UNICODE));
             }
             // 模版消息
