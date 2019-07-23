@@ -40,4 +40,9 @@ class Order extends BaseModel
     {
         return $this->hasOne(DistributionOrder::class, 'order', 'order');
     }
+
+    public function retail()
+    {
+        return $this->hasOne(OrderRetail::class,'order','order');
+    }
 }

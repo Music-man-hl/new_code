@@ -250,6 +250,7 @@ class OrderLogic
                 'status' => $order['refund_status'],
             ],
             "order_time" => date('Y-m-d H:m:s', $order['create']),
+            "transport_time" => $order['confirm_time'],//发货时间
             "complete_time" => max($order['confirm_time'] + (14 * 24 * 60 * 60) - NOW, 0),
         ];
 

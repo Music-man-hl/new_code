@@ -222,7 +222,7 @@ class OrderLogic extends BaseService
                     'sub_status' => $order['sub_status'],
                     'use_date' => isset($data['use_start']) ? date('Y-m-d', $data['use_start']) : '',
                     'is_docking' => $order['goods_code'] ? 1 : 0, //是否对接
-                    // 'refund_status' => $order['refund_status'],
+                    'transport_type' => $order->retail->transport_type ?? '' //发货类型
                 );
             }
         }
