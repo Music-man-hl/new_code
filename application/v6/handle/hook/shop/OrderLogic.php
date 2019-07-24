@@ -336,7 +336,7 @@ class OrderLogic
                 throw new Exception('product_retail_item 更新失败');
             }
             // 更新产品库存
-            $res = Product::where('id', $productId)->inc('sales', $count)->update();
+            $res = Product::where('id', $productId)->inc('sales', 1)->update();
 
             if (!$res) {
                 throw new Exception('product 更新失败');
