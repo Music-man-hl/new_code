@@ -2,9 +2,12 @@
 
 namespace app\v6\handle\hook\shop;
 
+use app\v6\model\Main\InformTpl;
 use app\v6\model\Main\Shop;
 use app\v6\model\Shop\Coupon;
 use app\v6\model\Shop\CouponCode;
+use app\v6\model\Shop\InformMsg;
+use app\v6\model\Shop\InformSend;
 use app\v6\model\Shop\Order;
 use app\v6\model\Shop\OrderContact;
 use app\v6\model\Shop\OrderExt;
@@ -406,6 +409,91 @@ class OrderLogic
         return success();
     }
 
+    public static function informPayInfo($order)
+    {
+        $informMsg = InformMsg::field('prepay_id,appid,openid')->where('order', $order['order'])->find();
+        if (empty($informMsg)) {
+            S::log('模板消息 - 获取支付数据 获取inform_msg数据失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        // 获取模板消息
+        $where = ['appid' => $informMsg['appid'], 'product_type' => Status::VOUCHER_PRODUCT, 'type' => Status::INFORM_PAY_SUCCESS];
+        $informTpl = InformTpl::field('tpl_id,status')->where($where)->find();
+        if (empty($informTpl)) {
+            S::log('模板消息 - 获取支付数据 获取inform_tpl数据失败 订单号:' . $order['order']);
+            return false;
+        }
+        if ($informTpl['status'] == Status::DISABLE) {
+            S::log('模板消息 - 获取支付数据 inform_tpl模板禁用 订单号:' . $order['order']);
+            return false;
+        }
+
+        $shop = Shop::field('name')->where('id', $order['shop_id'])->find();
+        if (empty($shop)) {
+            S::log('模板消息 - 获取支付数据 - 获取门店名称失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        $product_item_id = OrderRetail::where('order', $order['order'])->value('product_item_id');
+        if (empty($orderVoucher)) {
+            S::log('模板消息 - 获取支付数据 - 获取产类产品订单失败 订单号:' . $order['order']);
+            return false;
+        }
+        $item = ProductRetailItem::where('id', $product_item_id)->find();
+
+        if (empty($item)) {
+            S::log('模板消息 - 获取支付数据 - 获取券类产品失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        $orderExt = OrderExt::field('total_fee')->where('order', $order['order'])->find();
+        if (empty($orderExt)) {
+            S::log('模板消息 - 获取支付数据 - 获取真实支付的金额失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        $keywords = [
+            'keyword1' => ['value' => $order['product_name']],//商品名称
+            'keyword2' => ['value' => $item['name']],//订单内容
+            'keyword3' => ['value' => $orderExt['total_fee']],//金额
+            'keyword4' => ['value' => $order['order']],//订单号
+            'keyword5' => ['value' => '我们会尽快为您发货/请您尽快去提货点进行提货']
+        ];
+
+        $data = [
+            'touser' => $informMsg['openid'],
+            'template_id' => $informTpl['tpl_id'],
+            'form_id' => $informMsg['prepay_id'],
+            'data' => $keywords,
+            'appid' => $informMsg['appid'],
+            'page' => '/pages/order/detail?order_id=' . $order['order'] . '&sub_status=' . $order['sub_status'],
+        ];
+
+        S::log('模板消息 - 发送的数据:' . json_encode($data, JSON_UNESCAPED_UNICODE));
+        return $data;
+    }
+
+    public static function informPay($order, $tpl, $errcode, $errmsg)
+    {
+        $inform = [
+            'channel' => $order['channel'],
+            'order' => $order['order'],
+            'product_type' => Status::MARKET_PRODUCT,
+            'type' => Status::INFORM_PAY_SUCCESS,
+            'prepay_id' => $tpl['form_id'],
+            'appid' => $order['appid'],
+            'openid' => $order['openid'],
+            'template' => $tpl['template_id'],
+            'data' => json_encode($tpl['data'], JSON_UNESCAPED_UNICODE),
+            'status' => $errcode,
+            'errmsg' => $errmsg,
+            'create' => NOW
+        ];
+        S::log('模板消息 - 发送支付完成 记录inform_send 数据:' . json_encode($inform));
+        return InformSend::insert($inform);
+    }
+
     public static function smsApplyRefund($order)
     {
         return true;
@@ -415,4 +503,5 @@ class OrderLogic
     {
         return true;
     }
+
 }
