@@ -436,7 +436,7 @@ class OrderLogic
         }
 
         $product_item_id = OrderRetail::where('order', $order['order'])->value('product_item_id');
-        if (empty($orderVoucher)) {
+        if (empty($product_item_id)) {
             S::log('模板消息 - 获取支付数据 - 获取产类产品订单失败 订单号:' . $order['order']);
             return false;
         }
