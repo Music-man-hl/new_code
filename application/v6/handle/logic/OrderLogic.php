@@ -266,7 +266,7 @@ class OrderLogic extends BaseService
                 $getOrder['status'] = 9;
             }//超时订单状态为关闭.
 
-            if (in_array($getOrder['type'], [1, 2, 3])) {
+            if (in_array($getOrder['type'], [1, 2, 3, 5])) {
                 $refundReasonType = 1;
             } else {
                 $refundReasonType = $getOrder['type'];
@@ -342,7 +342,12 @@ class OrderLogic extends BaseService
         if (empty($user)) {
             error(40000, '不存在联系人！');
         }
-        $get_refund_type = $this->query->getRefundType('1');
+        if (in_array($getOrder['type'], [1, 2, 3, 5])) {
+            $refundReasonType = 1;
+        } else {
+            $refundReasonType = $getOrder['type'];
+        }
+        $get_refund_type = $this->query->getRefundType($refundReasonType);
         $type = [];
         foreach ($get_refund_type as $v) {
             $type[$v['id']] = $v['name'];
