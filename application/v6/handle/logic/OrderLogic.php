@@ -266,8 +266,14 @@ class OrderLogic extends BaseService
                 $getOrder['status'] = 9;
             }//超时订单状态为关闭.
 
+            if (in_array($getOrder['type'], [1, 2, 3])) {
+                $refundReasonType = 1;
+            } else {
+                $refundReasonType = $getOrder['type'];
+            }
+
             $list = OrderInit::factory($getOrder['type'])->apply('orderDetail', $getOrder, $data);
-            $list['refund']['reason_map'] = $this->query->getRefundReason(1);
+            $list['refund']['reason_map'] = $this->query->getRefundReason($refundReasonType);
             $list['order_id'] = $getOrder['order'];
             $list['order_time'] = date('Y-m-d H:i:s', $getOrder['create']);
             $list['order_status'] = $getOrder['status'];
