@@ -6,6 +6,7 @@ use app\v6\handle\hook\OrderInit;
 use app\v6\handle\query\OrderQuery;
 use app\v6\model\BaseModel;
 use app\v6\model\Main\Shop;
+use app\v6\model\Shop\User;
 use app\v6\Services\BaseService;
 use app\v6\Services\PmsApi;
 use lib\Status;
@@ -338,9 +339,9 @@ class OrderLogic extends BaseService
             'create' => NOW,
             'update' => NOW,
         ];
-        $user = $this->query->getContactByUid($users);
-        if (empty($user)) {
-            error(40000, '不存在联系人！');
+        $userName = User::where('id',$users)->value('nickname');
+        if (empty($userName)) {
+            error(40000, '用户不存在!');
         }
         if (in_array($getOrder['type'], [1, 2, 3, 5])) {
             $refundReasonType = 1;
@@ -358,7 +359,7 @@ class OrderLogic extends BaseService
             'type' => 1,
             'reason' => $typeName . '，' . $remark,
             'userid' => $users,
-            'username' => $user['name'],
+            'username' => $userName,
             'identity' => 1,
             'create' => NOW,
         ];
