@@ -67,13 +67,17 @@ class OrderLogic
             if (!$data['receive_address']) {
                 return error(40000, '收货地址不能为空');
             }
+            $contact = [
+                'name' => $data['receive_address']['name'],
+                'mobile' => $data['receive_address']['mobile']
+            ];
             $transportFee = $product->retailExt->transport_fee;
         } else {
             if (!$data['take_contact']) {
                 return error(40000, '自提联系人不能为空');
             }
-            $takeContact = OrderContact::get($data['take_contact']);
-            if (!$takeContact) {
+            $contact = OrderContact::get($data['take_contact']);
+            if (!$contact) {
                 return error(40800, '联系人不存在!');
             }
             $transportFee = 0;
@@ -101,9 +105,6 @@ class OrderLogic
             error(40000, '价格不正确');
         }
 
-
-        $userInfo = User::get($data['user_id']);
-
         $orderData = [
             'channel' => $data['channel'],
             'shop_id' => $data['shop_id'],
@@ -116,8 +117,8 @@ class OrderLogic
             'product' => $product['id'],
             'product_name' => $product['name'],
             'type' => 4,
-            'contact' => $userInfo['nickname'],
-            'mobile' => $userInfo['mobile'],
+            'contact' => $contact['name'],
+            'mobile' => $contact['mobile'],
             'uid' => $data['user_id'],
             'status' => 2,
             'ip' => getIp(),
@@ -376,7 +377,7 @@ class OrderLogic
     }
 
 
-    public static function refund($order, $user)
+    public static function refund($order)
     {
         $statusValid = [3, 5];
         if (!in_array($order['status'], $statusValid)) {
@@ -495,12 +496,12 @@ class OrderLogic
         return InformSend::insert($inform);
     }
 
-    public static function smsApplyRefund($order)
+    public static function smsApplyRefund()
     {
         return true;
     }
 
-    public static function smsPaySuccess($order)
+    public static function smsPaySuccess()
     {
         return true;
     }
