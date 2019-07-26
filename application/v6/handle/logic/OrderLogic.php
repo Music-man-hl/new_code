@@ -126,7 +126,7 @@ class OrderLogic extends BaseService
             if (!isset($couponArr[0]) && !in_array($product, $productArr)) {
                 $couponArr = $this->query->getCouponByPro($couponData['coupon_id'], $product, $channel, $type);
                 if ($couponArr[0]['totalNum'] != 0) {
-                    error(40000, '此商品无法使用该券!');
+                    error(40000, 'A此商品无法使用该券!');
                 }
             }
         }
@@ -139,7 +139,7 @@ class OrderLogic extends BaseService
             if ($price > $couponData['value']) {
                 $couponPrice = $couponData['value'];
             } else {
-                error(40000, '此商品无法使用该券!');
+                error(40000, 'B此商品无法使用该券!');
             }
         }
 
@@ -339,7 +339,7 @@ class OrderLogic extends BaseService
             'create' => NOW,
             'update' => NOW,
         ];
-        $userName = User::where('id',$users)->value('nickname');
+        $userName = User::where('id', $users)->value('nickname');
         if (empty($userName)) {
             error(40000, '用户不存在!');
         }
