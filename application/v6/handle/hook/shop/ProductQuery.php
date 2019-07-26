@@ -77,7 +77,7 @@ where p.`id`=:id AND p.`channel`=:channel AND p.`shop_id`=:shop_id AND p.`status
     static function getOrderAllotByRetail($idArr)
     {
         $idArr = explode(',', $idArr);
-        $sql = 'select count(r.product_item_id) as num,r.product_item_id as item_id 
+        $sql = 'select o.count as num,r.product_item_id as item_id 
         from order_retail r 
         LEFT JOIN  `order` o on o.`order`= r.`order`
         where r.product_item_id in(';
