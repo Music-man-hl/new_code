@@ -67,7 +67,12 @@ class OrderLogic extends BaseService
         //使用了优惠券判断优惠券的状态
         if (isset($params['coupon_id']) && !empty($params['coupon_id'])) {
             $product_id = OrderInit::factory($params['type'])->apply('getProductId', $params['id']);
-            $data['coupon_price'] = $this->coupon($params['coupon_id'], $user_id, $product_id, $params['total_price'], $channel, $params['type']);
+            $price = $params['total_price'] ?? 0;
+            if (isset($params['type']) && $params['type'] == 4) {
+                //商超产品优惠卷价格判断用原始总价
+                $price = $params['total_fee'] ?? 0;
+            }
+            $data['coupon_price'] = $this->coupon($params['coupon_id'], $user_id, $product_id, $price, $channel, $params['type']);
             $data['coupon'] = $params['coupon_id'];
             unset($params['coupon_id']);
         }
@@ -126,7 +131,7 @@ class OrderLogic extends BaseService
             if (!isset($couponArr[0]) && !in_array($product, $productArr)) {
                 $couponArr = $this->query->getCouponByPro($couponData['coupon_id'], $product, $channel, $type);
                 if ($couponArr[0]['totalNum'] != 0) {
-                    error(40000, 'A此商品无法使用该券!');
+                    error(40000, '此商品无法使用该券!');
                 }
             }
         }
@@ -139,7 +144,7 @@ class OrderLogic extends BaseService
             if ($price > $couponData['value']) {
                 $couponPrice = $couponData['value'];
             } else {
-                error(40000, 'B此商品无法使用该券!');
+                error(40000, '此商品无法使用该券!');
             }
         }
 
