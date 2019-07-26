@@ -144,6 +144,9 @@ class CouponLogic extends BaseService
                 if ($cl_v['type'] == '1' && $cl_v['value'] >= $params['price']) {
                     continue;
                 }
+                if ($cl_v['type'] == '2') {
+                    $cl_v['value'] = $cl_v['value'] * 100;
+                }
                 $list[] = [
                     'id' => encrypt($cl_v['id'], 9),
                     'name' => $cl_v['name'],
