@@ -93,8 +93,7 @@ class OrderLogic
             ->where('product_item_id', $productRetailItem->id)
             ->where('o.expire', '>', NOW)
             ->where('o.status', 2)
-            ->count();
-
+            ->sum('count');
 
         if (($productRetailItem['allot'] - $productRetailItem['sales'] - $lockOrderCount) < $data['count']) {
             error(40000, '库存不足！');
