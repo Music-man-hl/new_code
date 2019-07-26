@@ -111,8 +111,8 @@ class OrderLogic
             'pms_id' => $product['pms_id'],
             'total' => $data['total_fee'] + $data['transport_fee'],  //总价
             'count' => $data['count'],        //数量
-            'coupon_id' => $data['coupon'] ?? 0,
-            'rebate' => $data['coupon_price'] ?? 0,
+            'coupon_id' => $data['coupon_id'],
+            'rebate' => $data['coupon_price'],
             'product' => $product['id'],
             'product_name' => $product['name'],
             'type' => 4,
