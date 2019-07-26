@@ -2,9 +2,9 @@
 
 namespace app\v6\controller;
 
-use app\v6\Services\PmsApi;
-use PhpAmqpLib\Connection\AMQPStreamConnection;
-use PhpAmqpLib\Message\AMQPMessage;
+use app\v6\handle\hook\OrderInit;
+use app\v6\handle\logic\PayLogic;
+use app\v6\model\Shop\Order;
 
 class Test extends Base
 {
@@ -22,34 +22,9 @@ class Test extends Base
     {
 
         $id = encrypt('ZWU', '9', false);
-dd($id);
+        $re = PayLogic::service()->informSend(OrderInit::class,Order::where('order', 190724165310080015)->find());
+        dd($re);
     }
 
-    public function publishMq()
-    {
-        $connection = new AMQPStreamConnection('172.19.0.1', 5672, 'guest', 'guest');
-        $channel = $connection->channel();
-
-        $str = '我吃有name3!';
-        $message = new AMQPMessage($str, ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]);
-        $channel->basic_qos(null, 1, null);
-        $channel->basic_publish($message, 'test.direct', 'task_queue');
-
-        echo " [x] Sent $str \n";
-
-        $channel->close();
-        $connection->close();
-    }
-
-    public function refundPms()
-    {
-        $data = [
-            'channelId' => 1001,
-            'pmsId' => 10001,
-            'orderCode' => '19041817485929424657',
-        ];
-        $response = app(PmsApi::class)->cancelOrder($data);
-        var_dump($response);
-    }
 
 }

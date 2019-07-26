@@ -2,9 +2,12 @@
 
 namespace app\v6\handle\hook\shop;
 
+use app\v6\model\Main\InformTpl;
 use app\v6\model\Main\Shop;
 use app\v6\model\Shop\Coupon;
 use app\v6\model\Shop\CouponCode;
+use app\v6\model\Shop\InformMsg;
+use app\v6\model\Shop\InformSend;
 use app\v6\model\Shop\Order;
 use app\v6\model\Shop\OrderContact;
 use app\v6\model\Shop\OrderExt;
@@ -64,13 +67,17 @@ class OrderLogic
             if (!$data['receive_address']) {
                 return error(40000, '收货地址不能为空');
             }
+            $contact = [
+                'name' => $data['receive_address']['name'],
+                'mobile' => $data['receive_address']['mobile']
+            ];
             $transportFee = $product->retailExt->transport_fee;
         } else {
             if (!$data['take_contact']) {
                 return error(40000, '自提联系人不能为空');
             }
-            $takeContact = OrderContact::get($data['take_contact']);
-            if (!$takeContact) {
+            $contact = OrderContact::get($data['take_contact']);
+            if (!$contact) {
                 return error(40800, '联系人不存在!');
             }
             $transportFee = 0;
@@ -86,8 +93,7 @@ class OrderLogic
             ->where('product_item_id', $productRetailItem->id)
             ->where('o.expire', '>', NOW)
             ->where('o.status', 2)
-            ->count();
-
+            ->sum('count');
 
         if (($productRetailItem['allot'] - $productRetailItem['sales'] - $lockOrderCount) < $data['count']) {
             error(40000, '库存不足！');
@@ -98,9 +104,6 @@ class OrderLogic
             error(40000, '价格不正确');
         }
 
-
-        $userInfo = User::get($data['user_id']);
-
         $orderData = [
             'channel' => $data['channel'],
             'shop_id' => $data['shop_id'],
@@ -108,13 +111,13 @@ class OrderLogic
             'pms_id' => $product['pms_id'],
             'total' => $data['total_fee'] + $data['transport_fee'],  //总价
             'count' => $data['count'],        //数量
-            'coupon_id' => $data['coupon'] ?? 0,
-            'rebate' => $data['coupon_price'] ?? 0,
+            'coupon_id' => $data['coupon_id'],
+            'rebate' => $data['coupon_price'],
             'product' => $product['id'],
             'product_name' => $product['name'],
             'type' => 4,
-            'contact' => $userInfo['nickname'],
-            'mobile' => $userInfo['mobile'],
+            'contact' => $contact['name'],
+            'mobile' => $contact['mobile'],
             'uid' => $data['user_id'],
             'status' => 2,
             'ip' => getIp(),
@@ -180,6 +183,7 @@ class OrderLogic
                 'product_item_id' => $data['id'],
                 'transport_type' => $data['transport_type'],
                 'transport_fee' => $data['transport_fee'] ?: 0,
+                'transport_explain' => $productRetailItem->ext->explain,
                 'receive_address' => json_encode($data['receive_address']) ?: '',
                 'take_address' => json_encode($data['take_address']) ?: '',
                 'take_contact' => json_encode($data['take_contact']) ?: '',
@@ -336,7 +340,7 @@ class OrderLogic
                 throw new Exception('product_retail_item 更新失败');
             }
             // 更新产品库存
-            $res = Product::where('id', $productId)->inc('sales', $count)->update();
+            $res = Product::where('id', $productId)->inc('sales', 1)->update();
 
             if (!$res) {
                 throw new Exception('product 更新失败');
@@ -372,17 +376,12 @@ class OrderLogic
     }
 
 
-    public static function refund($order, $user)
+    public static function refund($order)
     {
         $statusValid = [3, 5];
         if (!in_array($order['status'], $statusValid)) {
             error(40000, '状态不允许退款');
         }
-    }
-
-    public static function smsApplyRefund($order)
-    {
-        return OrderQuery::smsApplyRefund($order);
     }
 
     public static function getProductId($id)
@@ -410,4 +409,100 @@ class OrderLogic
         }
         return success();
     }
+
+    public static function informPayInfo($order)
+    {
+        $informMsg = InformMsg::field('prepay_id,appid,openid')->where('order', $order['order'])->find();
+        if (empty($informMsg)) {
+            S::log('模板消息 - 获取支付数据 获取inform_msg数据失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        // 获取模板消息
+        $where = ['appid' => $informMsg['appid'], 'product_type' => Status::VOUCHER_PRODUCT, 'type' => Status::INFORM_PAY_SUCCESS];
+        $informTpl = InformTpl::field('tpl_id,status')->where($where)->find();
+        if (empty($informTpl)) {
+            S::log('模板消息 - 获取支付数据 获取inform_tpl数据失败 订单号:' . $order['order']);
+            return false;
+        }
+        if ($informTpl['status'] == Status::DISABLE) {
+            S::log('模板消息 - 获取支付数据 inform_tpl模板禁用 订单号:' . $order['order']);
+            return false;
+        }
+
+        $shop = Shop::field('name')->where('id', $order['shop_id'])->find();
+        if (empty($shop)) {
+            S::log('模板消息 - 获取支付数据 - 获取门店名称失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        $product_item_id = OrderRetail::where('order', $order['order'])->value('product_item_id');
+        if (empty($product_item_id)) {
+            S::log('模板消息 - 获取支付数据 - 获取产类产品订单失败 订单号:' . $order['order']);
+            return false;
+        }
+        $item = ProductRetailItem::where('id', $product_item_id)->find();
+
+        if (empty($item)) {
+            S::log('模板消息 - 获取支付数据 - 获取券类产品失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        $orderExt = OrderExt::field('total_fee')->where('order', $order['order'])->find();
+        if (empty($orderExt)) {
+            S::log('模板消息 - 获取支付数据 - 获取真实支付的金额失败 订单号:' . $order['order']);
+            return false;
+        }
+
+        $keywords = [
+            'keyword1' => ['value' => $order['product_name']],//商品名称
+            'keyword2' => ['value' => $item['name']],//订单内容
+            'keyword3' => ['value' => $orderExt['total_fee']],//金额
+            'keyword4' => ['value' => $order['order']],//订单号
+            'keyword5' => ['value' => '我们会尽快为您发货/请您尽快去提货点进行提货']
+        ];
+
+        $data = [
+            'touser' => $informMsg['openid'],
+            'template_id' => $informTpl['tpl_id'],
+            'form_id' => $informMsg['prepay_id'],
+            'data' => $keywords,
+            'appid' => $informMsg['appid'],
+            'page' => '/pages/order/detail?order_id=' . $order['order'] . '&sub_status=' . $order['sub_status'],
+        ];
+
+        S::log('模板消息 - 发送的数据:' . json_encode($data, JSON_UNESCAPED_UNICODE));
+        return $data;
+    }
+
+    public static function informPay($order, $tpl, $errcode, $errmsg)
+    {
+        $inform = [
+            'channel' => $order['channel'],
+            'order' => $order['order'],
+            'product_type' => Status::MARKET_PRODUCT,
+            'type' => Status::INFORM_PAY_SUCCESS,
+            'prepay_id' => $tpl['form_id'],
+            'appid' => $order['appid'],
+            'openid' => $order['openid'],
+            'template' => $tpl['template_id'],
+            'data' => json_encode($tpl['data'], JSON_UNESCAPED_UNICODE),
+            'status' => $errcode,
+            'errmsg' => $errmsg,
+            'create' => NOW
+        ];
+        S::log('模板消息 - 发送支付完成 记录inform_send 数据:' . json_encode($inform));
+        return InformSend::insert($inform);
+    }
+
+    public static function smsApplyRefund()
+    {
+        return true;
+    }
+
+    public static function smsPaySuccess()
+    {
+        return true;
+    }
+
 }

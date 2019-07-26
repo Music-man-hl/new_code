@@ -6,6 +6,7 @@ use app\v6\handle\hook\OrderInit;
 use app\v6\handle\query\OrderQuery;
 use app\v6\model\BaseModel;
 use app\v6\model\Main\Shop;
+use app\v6\model\Shop\User;
 use app\v6\Services\BaseService;
 use app\v6\Services\PmsApi;
 use lib\Status;
@@ -266,8 +267,14 @@ class OrderLogic extends BaseService
                 $getOrder['status'] = 9;
             }//超时订单状态为关闭.
 
+            if (in_array($getOrder['type'], [1, 2, 3, 5])) {
+                $refundReasonType = 1;
+            } else {
+                $refundReasonType = $getOrder['type'];
+            }
+
             $list = OrderInit::factory($getOrder['type'])->apply('orderDetail', $getOrder, $data);
-            $list['refund']['reason_map'] = $this->query->getRefundReason(1);
+            $list['refund']['reason_map'] = $this->query->getRefundReason($refundReasonType);
             $list['order_id'] = $getOrder['order'];
             $list['order_time'] = date('Y-m-d H:i:s', $getOrder['create']);
             $list['order_status'] = $getOrder['status'];
@@ -332,11 +339,16 @@ class OrderLogic extends BaseService
             'create' => NOW,
             'update' => NOW,
         ];
-        $user = $this->query->getContactByUid($users);
-        if (empty($user)) {
-            error(40000, '不存在联系人！');
+        $userName = User::where('id',$users)->value('nickname');
+        if (empty($userName)) {
+            error(40000, '用户不存在!');
         }
-        $get_refund_type = $this->query->getRefundType('1');
+        if (in_array($getOrder['type'], [1, 2, 3, 5])) {
+            $refundReasonType = 1;
+        } else {
+            $refundReasonType = $getOrder['type'];
+        }
+        $get_refund_type = $this->query->getRefundType($refundReasonType);
         $type = [];
         foreach ($get_refund_type as $v) {
             $type[$v['id']] = $v['name'];
@@ -347,7 +359,7 @@ class OrderLogic extends BaseService
             'type' => 1,
             'reason' => $typeName . '，' . $remark,
             'userid' => $users,
-            'username' => $user['name'],
+            'username' => $userName,
             'identity' => 1,
             'create' => NOW,
         ];
@@ -383,7 +395,7 @@ class OrderLogic extends BaseService
     {
         $ret = OrderInit::factory($order['type'])->apply('smsApplyRefund', $order);
         if ($ret) {
-            $res = S::exec($order['order']);
+            $res = S::exec($order, 2);
             S::log('退款申请 - 及时发送短信结果:' . json_encode($res, JSON_UNESCAPED_UNICODE));
         }
     }
