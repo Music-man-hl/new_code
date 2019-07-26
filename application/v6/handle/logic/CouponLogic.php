@@ -125,40 +125,25 @@ class CouponLogic extends BaseService
                             if ($code_v['type'] == '2') {
                                 $code_v['value'] = $code_v['value'] * 100;
                             }
-                            if ($code_v['type'] == '1') {
-                                if ($params['price'] >= $code_v['value']) {
-                                    $list[] = [
-                                        'id' => encrypt($code_v['coupon_id'], 9),
-                                        'name' => $v['name'],
-                                        'code' => $code_v['id'],
-                                        'type' => $code_v['type'], //1为面值2为折扣
-                                        'value' => floatval($code_v['value']),//是折扣的话(0.1~0.99)
-                                        'limit' => floatval($code_v['limit']),
-                                        'start' => $code_v['start'],
-                                        'end' => $code_v['end'],
-                                        'desc' => $v['intro'],
-                                        'status' => 0 //此处券状态似乎没有用
-                                    ];
-                                }
-                            } else {
-                                $list[] = [
-                                    'id' => encrypt($code_v['coupon_id'], 9),
-                                    'name' => $v['name'],
-                                    'code' => $code_v['id'],
-                                    'type' => $code_v['type'], //1为面值2为折扣
-                                    'value' => floatval($code_v['value']),//是折扣的话(0.1~0.99)
-                                    'limit' => floatval($code_v['limit']),
-                                    'start' => $code_v['start'],
-                                    'end' => $code_v['end'],
-                                    'desc' => $v['intro'],
-                                    'status' => 0 //此处券状态似乎没有用
-                                ];
-                            }
-
+                            $list[] = [
+                                'id' => encrypt($code_v['coupon_id'], 9),
+                                'name' => $v['name'],
+                                'code' => $code_v['id'],
+                                'type' => $code_v['type'], //1为面值2为折扣
+                                'value' => floatval($code_v['value']),//是折扣的话(0.1~0.99)
+                                'limit' => floatval($code_v['limit']),
+                                'start' => $code_v['start'],
+                                'end' => $code_v['end'],
+                                'desc' => $v['intro'],
+                                'status' => 0 //此处券状态似乎没有用
+                            ];
                         }
                     }
                 }
             } else {
+                if ($cl_v['type'] == '1' && $cl_v['value'] >= $params['price']) {
+                    continue;
+                }
                 $list[] = [
                     'id' => encrypt($cl_v['id'], 9),
                     'name' => $cl_v['name'],
