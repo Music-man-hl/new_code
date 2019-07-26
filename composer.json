@@ -26,7 +26,10 @@
         "php-amqplib/php-amqplib": "^2.9",
         "guzzlehttp/guzzle": "^6.3",
         "overtrue/wechat": "^4.1",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ext-bcmath": "*",
+        "ext-libxml": "*",
+        "ext-simplexml": "*"
     },
     "autoload": {
         "psr-4": {
