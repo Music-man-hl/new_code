@@ -51,7 +51,7 @@ class CouponQuery
     {
         $couponCode = CouponCode::where('id', $code)->where('channel', $channel)->where('uid', $user)
             ->with('coupon')->find();
-        return array_merge($couponCode->toArray(),$couponCode->coupon->toArray());
+        return array_merge($couponCode->toArray(), $couponCode->coupon->toArray());
     }
 
     public function getCouponByProAndPrice($channel, $id, $users, $price, $type, $shop_id = '')
@@ -64,7 +64,8 @@ class CouponQuery
         return CouponProduct::where('product_id', $id)
             ->where('product_type', $type)
             ->with(['coupon' => function ($query) use ($channel, $users, $price, $shop_id) {
-                $query->with(['code' => function ($query) use ($channel, $users, $price, $shop_id) {
+                $query->where('value', '<=', $price)
+                ->with(['code' => function ($query) use ($channel, $users, $price, $shop_id) {
                     $query->where('channel', $channel)
                         ->where('shop_id', $shop_id)
                         ->where('uid', $users)
@@ -72,6 +73,7 @@ class CouponQuery
                         ->where('start', '<=', NOW)
                         ->where('end', '>=', NOW)
                         ->where('limit', '<=', $price);
+
                 }]);
             }])->select();
     }

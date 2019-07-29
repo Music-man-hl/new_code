@@ -281,14 +281,14 @@ class ExtensionLogic extends BaseService
     //获取当前渠道升级规则
     public function upgrade($channel)
     {
-        $result = DistributionUpgradeCondition::field('id,channel,level,level_name,all_order_num,all_money')->where(['channel' => $channel])->select();
+        $result = DistributionUpgradeCondition::field('id,channel,level,level_name,order_num as all_order_num,money as all_money')->where(['channel' => $channel])->select();
         if ($result) {
             $data['upgrade_condition'] = $result;
         } else {
             error(["msg" => "获取升级规则失败"]);
         }
         //获取常见问题
-        $result = DistributionQuestion::field('id,question,answer')->where(['channel' => $channel])->select();
+        $result = DistributionQuestion::field('id,question,answer')->select();
         $data['question'] = $result;
         success($data);
     }
