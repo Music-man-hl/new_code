@@ -68,7 +68,7 @@ class OrderQuery
     function getOrderById($channels, $users, $order)
     {
 
-        $field = 'o.*,i.data,e.*,r.*';
+        $field = 'o.*,i.data,e.*,r.create rcreate,r.update rupdate';
 
         $sql = 'SELECT ' . $field . ' FROM `order` o 
                    LEFT JOIN `order_info` i ON o.id=i.order_id
