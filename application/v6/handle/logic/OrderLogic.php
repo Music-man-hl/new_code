@@ -5,10 +5,13 @@ namespace app\v6\handle\logic;
 use app\v6\handle\hook\OrderInit;
 use app\v6\handle\query\OrderQuery;
 use app\v6\model\BaseModel;
+use app\v6\model\Main\Channel;
 use app\v6\model\Main\Shop;
+use app\v6\model\Shop\OrderRetailExpress;
 use app\v6\model\Shop\User;
 use app\v6\Services\BaseService;
 use app\v6\Services\PmsApi;
+use lib\Express;
 use lib\Status;
 use third\S;
 
@@ -403,5 +406,90 @@ class OrderLogic extends BaseService
             $res = S::exec($order, 2);
             S::log('退款申请 - 及时发送短信结果:' . json_encode($res, JSON_UNESCAPED_UNICODE));
         }
+    }
+
+    function express($channels, $params, $users)
+    {
+        if (!isset($params['transport_order'])) {
+            error(40000, '参数不全！');
+        }
+        $transport_order = $params['transport_order'];
+        $getOrder = $this->query->getExpress($channels, $users, $transport_order);
+        $list = [];
+        if (!empty($getOrder)) {
+            $getOrder = $getOrder[0];
+            $data = json_decode($getOrder['data'], true);
+            $list = [
+                'cover' => picture($data['bucket'], $data['cover']),
+                'order_status' => $getOrder['status'],
+                'transport_company' => $getOrder['transport_company'],
+                'state' => 0,
+                'traces' => []
+            ];
+
+            $retail = OrderRetailExpress::field('express')->where('transport_order', $transport_order)->where('channel', $channels['channel'])->find();
+            if (empty($retail)) {
+                $CustomerName = '';
+                $transport_code = $retail['transport_code'];
+                if ($transport_code == 'JD') {
+                    $customer_name_data = Channel::field('customer_name')->where('id', $channels['channel'])->find();
+                    $CustomerName = $customer_name_data['customer_name'];
+                }
+                if ($transport_code == 'SF') {
+                    $receive_address = json_decode($getOrder['receive_address'], true);
+                    $CustomerName = substr($receive_address['mobile'], -4);
+                }
+                $getExpress = Express::getTrace($getOrder['transport_code'], $transport_order, $CustomerName);
+                if (is_array($getExpress)) {
+                    //有数据的情况
+                    $state = (int)$getExpress['State'];
+                    $list['state'] = $state;
+                    if ($getExpress['Success']) {
+
+                        $traces = $getExpress['Traces'];
+                        $setTraces = [];
+                        if (!empty($traces)) {
+                            $length = count($traces);
+                            for ($i = $length - 1; $i >= 0; $i--) {
+                                $setTraces[] = [
+                                    'time' => $traces[$i]['AcceptTime'],
+                                    'station' => $traces[$i]['AcceptStation'],
+                                ];
+                            }
+                            $list['traces'] = $setTraces;
+                            if ($state == 3) {
+                                //已经签收的要存库
+                                $post = [
+                                    'state' => $state,
+                                    'traces' => $setTraces
+                                ];
+
+                                OrderRetailExpress::create([
+                                    'channel' => $channels['channel'],
+                                    'transport_order' => $transport_order,
+                                    'express' => json_encode($post, JSON_UNESCAPED_UNICODE)
+                                ]);
+
+                            }
+                        }
+
+                    } else {
+                        error(50000, $getExpress['Reason']);
+                    }
+
+                }
+
+            } else {
+                $express = json_decode($retail['express'], true);
+                $list['state'] = (int)$express['state'];
+                $list['traces'] = $express['traces'];
+            }
+
+            success($list);
+
+        } else {
+            error(50000, '没有找到此单号');
+        }
+        success($list);
     }
 }
