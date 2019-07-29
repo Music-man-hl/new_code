@@ -23,6 +23,7 @@ class Digital extends Base
             'scenic_type' => ['type' => 'GET', 'lived' => false],//数字专线景点推荐分类
             'scenic_list' => ['type' => 'GET', 'lived' => false],//数字专线景点推荐列表
             'area_list' => ['type' => 'GET', 'lived' => false],//数字专线列表
+            'area_lists' => ['type' => 'GET', 'lived' => false],//数字专线列表新结构
             'area' => ['type' => 'GET', 'lived' => false],//数字专线地区列表
             'article_detail' => ['type' => 'GET', 'lived' => false],//数字专线文章详情
             'single_index' => ['type' => 'GET', 'lived' => false],//数字单线主页
@@ -124,6 +125,11 @@ class Digital extends Base
     public function buy_type()
     {
         DigitalLogic::service()->buy_type($this->channels, $this->all_param); //,$this->users
+    }
+    //数字专线列表新结构
+    public function area_lists()
+    {
+        DigitalLogic::service()->area_lists($this->channels, $this->all_param); //,$this->users
     }
 
 }
