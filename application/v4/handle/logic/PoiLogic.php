@@ -41,11 +41,11 @@ class PoiLogic extends BaseService
         $lat = floatval($shop->lat);
         $lng = floatval($shop->lng);
 
-        if (empty($lat) && empty($lng)) error(50000, '店铺未设置经纬度');
+        //if (empty($lat) && empty($lng)) error(50000, '店铺未设置经纬度');
 
         $db = Db::connect(PoiArticle::getConfig());
         $table = PoiArticle::getTable();
-
+        
         $total_count = PoiArticle::where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::POI_STATUS_OK)->where('category', $id)->count();
         $sql = "SELECT `id`,`name`,`intro`,`cover`,`lat`,`lng`,ROUND(6378.138*2*ASIN(SQRT(POW(SIN(({$lat}*PI()/180-lat*PI()/180)/2),2)+
 COS({$lat}*PI()/180)*COS(lat*PI()/180)*POW(SIN(({$lng}*PI()/180-lng*PI()/180)/2),2)))*1000) AS distance 

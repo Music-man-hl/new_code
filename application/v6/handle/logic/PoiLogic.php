@@ -41,7 +41,7 @@ class PoiLogic extends BaseService
         $lat = floatval($shop->lat);
         $lng = floatval($shop->lng);
 
-        if (empty($lat) && empty($lng)) error(50000, '店铺未设置经纬度');
+        //if (empty($lat) && empty($lng)) error(50000, '店铺未设置经纬度');
 
         $db = Db::connect(PoiArticle::getConfig());
         $table = PoiArticle::getTable();
