@@ -234,28 +234,28 @@ class OrderLogic
             $refund = true;
         }
         $detail = [
-            "type" => $order['type'],
-            "order_id" => $order['order'],
-            "order_status" => $order['status'],
-            "product_name" => $order['product_name'],
-            "product_item_name" => $data['product_item_name'],
-            "product_item_price" => $data['sale_price'],
-            "order_count" => $order['count'], // 订单件数
-            "order_total" => floatval($order['total']), //总价
-            "remark" => $order['remark'],
-            "coupon" => $order['rebate'], //使用优惠券金额
-            "pay_total" => floatval(add($order['total'], -$order['rebate'], -$order['sales_rebate'])), //实际支付金额
-            "product_id" => encrypt($order['product'], 1),
-            "product_cover" => picture($data['bucket'], $data['cover']),
+            'type' => $order['type'],
+            'order_id' => $order['order'],
+            'order_status' => $order['status'],
+            'product_name' => $order['product_name'],
+            'product_item_name' => $data['product_item_name'],
+            'product_item_price' => $data['sale_price'],
+            'order_count' => $order['count'], // 订单件数
+            'order_total' => (float)$order['total'], //总价
+            'remark' => $order['remark'],
+            'coupon' => $order['rebate'], //使用优惠券金额
+            'pay_total' => (float)add($order['total'], -$order['rebate'], -$order['sales_rebate']), //实际支付金额
+            'product_id' => encrypt($order['product'], 1),
+            'product_cover' => picture($data['bucket'], $data['cover']),
             'product_desc' => $data['product_desc'] ?? '',
             'product_item_id' => $data['product_item_id'],
-            "refund" => [
+            'refund' => [
                 'is_refundable' => $refund,
                 'status' => $order['refund_status'],
             ],
-            "order_time" => date('Y-m-d H:m:s', $order['create']),
-            "transport_time" => $order['confirm_time'],//发货时间
-            "complete_time" => max($order['confirm_time'] + (14 * 24 * 60 * 60) - NOW, 0),
+            'order_time' => date('Y-m-d H:m:s', $order['create']),
+            'transport_time' => $order['confirm_time'],//发货时间
+            'complete_time' => (14 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - ($order['update'] ?? 0 - $order['create'] ?? 0)),
         ];
 
         return array_merge($detail, $orderRetailData->toArray());
