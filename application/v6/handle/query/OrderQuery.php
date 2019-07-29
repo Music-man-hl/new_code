@@ -68,11 +68,12 @@ class OrderQuery
     function getOrderById($channels, $users, $order)
     {
 
-        $field = 'o.*,i.data,e.`remark`,e.assist_check_no,e.qrcode_img_url';
+        $field = 'o.*,i.data,e.confirm_time,e.remark,e.assist_check_no,e.qrcode_img_url,r.create rcreate,r.update rupdate';
 
         $sql = 'SELECT ' . $field . ' FROM `order` o 
                    LEFT JOIN `order_info` i ON o.id=i.order_id
                    LEFT JOIN `order_ext`  e ON o.id=e.order_id
+                   LEFT JOIN `order_refund` r ON o.id=r.order_id
                    WHERE o.channel=:channel  AND o.uid=:uid AND o.order=:order';
 
         return Order::query($sql, ['channel' => $channels['channel'], 'uid' => $users, 'order' => $order]);
