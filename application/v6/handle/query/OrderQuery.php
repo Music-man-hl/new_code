@@ -67,8 +67,8 @@ class OrderQuery
 
     function getOrderById($channels, $users, $order)
     {
-        
-        $field = 'o.*,i.data,e.`remark`,e.assist_check_no,e.qrcode_img_url';
+
+        $field = 'o.*,i.data,e.confirm_time,e.remark,e.assist_check_no,e.qrcode_img_url,r.create rcreate,r.update rupdate';
 
         $sql = 'SELECT ' . $field . ' FROM `order` o 
                    LEFT JOIN `order_info` i ON o.id=i.order_id
@@ -241,6 +241,21 @@ class OrderQuery
     public function getProductByCouponCount($coupon)
     {
         return CouponProduct::where('coupon_id', $coupon)->count();
+    }
+
+    //获取物流信息
+    function getExpress($channels, $users, $transport_order)
+    {
+
+        $field = 'o.`status`,i.`data`,r.transport_code,r.transport_company,r.receive_address';
+
+        $sql = 'SELECT ' . $field . ' FROM `order` o 
+                JOIN order_retail r on o.id=r.order_id
+                JOIN order_info i on o.id=i.order_id
+                WHERE o.channel=:channel  AND o.uid=:uid AND o.order=:order';
+
+        return Order::query($sql, ['channel' => $channels['channel'], 'uid' => $users,'transport_order'=>$transport_order]);
+
     }
 
 }

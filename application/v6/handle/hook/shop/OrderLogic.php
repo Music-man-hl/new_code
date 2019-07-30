@@ -255,9 +255,8 @@ class OrderLogic
             ],
             'order_time' => date('Y-m-d H:m:s', $order['create']),
             'transport_time' => $order['confirm_time'],//发货时间
-            'complete_time' => (14 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - ($order['update'] ?? 0 - $order['create'] ?? 0)),
+            'complete_time' => (10 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - (($order['rupdate'] ?? 0) - ($order['rcreate'] ?? 0))),
         ];
-
         return array_merge($detail, $orderRetailData->toArray());
     }
 

@@ -25,6 +25,7 @@ class Order extends Base
 	       'refund'  => ['type'=>'POST' , 'lived' => true ],
 	       'booking' => ['type'=>'POST' , 'lived' => true ],
 	       'complete' => ['type'=>'PUT' , 'lived' => true ],
+	       'express' => ['type'=>'GET' , 'lived' => true ],
 	   ];
 	}
 
@@ -70,6 +71,11 @@ class Order extends Base
         OrderLogic::service()->refund($this->channels,$this->all_param,$this->users);
     }
 
+    //订单物流
+    public function express()
+    {
+        OrderLogic::service()->express($this->channels,$this->all_param,$this->users);
+    }
 
     function _empty($name){
 
