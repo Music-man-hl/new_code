@@ -14,6 +14,7 @@ use app\v6\model\Shop\OrderContact;
 use app\v6\model\Shop\OrderExt;
 use app\v6\model\Shop\OrderInfo;
 use app\v6\model\Shop\OrderPaylog;
+use app\v6\model\Shop\OrderRefundLog;
 use app\v6\model\Shop\OrderRetail;
 use app\v6\model\Shop\Product;
 use app\v6\model\Shop\ProductRetailItem;
@@ -235,6 +236,13 @@ class OrderLogic
         ) {
             $refund = true;
         }
+
+        $orderRefundLogs = OrderRefundLog::where('refund_id', $order['rid'])->order('create')->select();
+        $moveTime = 0;
+        $iMax = count($orderRefundLogs);
+        for ($i = 0; $i < $iMax; $i += 2) {
+            $moveTime += $orderRefundLogs[$i + 1] - $orderRefundLogs[$i];
+        }
         $detail = [
             'type' => $order['type'],
             'order_id' => $order['order'],
@@ -257,7 +265,7 @@ class OrderLogic
             ],
             'order_time' => date('Y-m-d H:m:s', $order['create']),
             'transport_time' => $order['confirm_time'],//发货时间
-            'complete_time' => (10 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - (($order['rupdate'] ?? 0) - ($order['rcreate'] ?? 0))),
+            'complete_time' => (10 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - $moveTime),
         ];
         return array_merge($detail, $orderRetailData->toArray());
     }
