@@ -2,6 +2,7 @@
 
 namespace app\v6\handle\hook\shop;
 
+use app\v6\handle\logic\ExtensionLogic;
 use app\v6\model\Main\InformTpl;
 use app\v6\model\Main\Shop;
 use app\v6\model\Shop\Coupon;
@@ -407,6 +408,7 @@ class OrderLogic
         if (!$order->together('ext')->save()) {
             return error(50000, '订单操作失败');
         }
+        ExtensionLogic::completeSendMq($order);
         return success();
     }
 
