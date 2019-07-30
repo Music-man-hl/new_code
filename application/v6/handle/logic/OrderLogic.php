@@ -423,6 +423,7 @@ class OrderLogic extends BaseService
                 'cover' => picture($data['bucket'], $data['cover']),
                 'order_status' => $getOrder['status'],
                 'transport_company' => $getOrder['transport_company'],
+                'transport_code' => $getOrder['transport_code'],
                 'state' => 0,
                 'traces' => []
             ];
