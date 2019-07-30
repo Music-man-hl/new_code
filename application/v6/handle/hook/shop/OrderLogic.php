@@ -183,6 +183,7 @@ class OrderLogic
                 'product_item_id' => $data['id'],
                 'transport_type' => $data['transport_type'],
                 'transport_fee' => $data['transport_fee'] ?: 0,
+                'transport_fee_type' => $productRetailItem->ext->transport_fee_type,
                 'transport_explain' => $productRetailItem->ext->explain,
                 'receive_address' => json_encode($data['receive_address']) ?: '',
                 'take_address' => json_encode($data['take_address']) ?: '',
