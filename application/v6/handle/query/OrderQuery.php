@@ -247,7 +247,7 @@ class OrderQuery
     function getExpress($channels, $users, $transport_order)
     {
 
-        $field = 'o.`status`,i.`data`,r.transport_code,r.transport_company,r.receive_address';
+        $field = 'o.`status`,i.`data`,r.transport_code,r.transport_order,r.transport_company,r.receive_address';
 
         $sql = 'SELECT ' . $field . ' FROM `order` o 
                 JOIN order_retail r on o.id=r.order_id
