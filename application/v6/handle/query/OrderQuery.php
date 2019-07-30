@@ -252,7 +252,7 @@ class OrderQuery
         $sql = 'SELECT ' . $field . ' FROM `order` o 
                 JOIN order_retail r on o.id=r.order_id
                 JOIN order_info i on o.id=i.order_id
-                WHERE o.channel=:channel  AND o.uid=:uid AND o.order=:order';
+                WHERE o.channel=:channel  AND o.uid=:uid AND r.transport_order=:transport_order ';
 
         return Order::query($sql, ['channel' => $channels['channel'], 'uid' => $users,'transport_order'=>$transport_order]);
 
