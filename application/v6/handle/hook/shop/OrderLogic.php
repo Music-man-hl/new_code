@@ -232,16 +232,18 @@ class OrderLogic
         if (
             in_array($order['status'], [Status::ORDER_PAY, Status::ORDER_CONFIRM]) &&
             in_array($order['refund_status'], [Status::REFUND_DEFAULT, Status::REFUND_REFUSE]) &&
-            $data['is_refund'] == 1
+            ($data['is_refund'] == 1)
         ) {
             $refund = true;
         }
 
-        $orderRefundLogs = OrderRefundLog::where('refund_id', $order['rid'])->order('create')->column('create');
         $moveTime = 0;
-        $iMax = count($orderRefundLogs);
-        for ($i = 0; $i < $iMax; $i += 2) {
-            $moveTime += $orderRefundLogs[$i + 1] - $orderRefundLogs[$i];
+        if ($order['refund_status'] == 2) {
+            $orderRefundLogs = OrderRefundLog::where('refund_id', $order['rid'])->order('create')->column('create');
+            $iMax = count($orderRefundLogs);
+            for ($i = 0; $i < $iMax; $i += 2) {
+                $moveTime += $orderRefundLogs[$i + 1] - $orderRefundLogs[$i];
+            }
         }
         $detail = [
             'type' => $order['type'],
