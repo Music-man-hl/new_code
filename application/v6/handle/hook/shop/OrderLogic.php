@@ -237,7 +237,7 @@ class OrderLogic
             $refund = true;
         }
 
-        $orderRefundLogs = OrderRefundLog::where('refund_id', $order['rid'])->order('create')->select();
+        $orderRefundLogs = OrderRefundLog::where('refund_id', $order['rid'])->order('create')->column('create');
         $moveTime = 0;
         $iMax = count($orderRefundLogs);
         for ($i = 0; $i < $iMax; $i += 2) {
