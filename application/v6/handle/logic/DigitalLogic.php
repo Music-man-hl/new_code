@@ -714,7 +714,7 @@ class DigitalLogic extends BaseService
         $countyLists = $list = $getSites = $sites = [];
 
         //获取所有的专线
-        $countyAllLists = DigitalLine::alias('l')->join([DigitalArea::getTable() => 'a'], 'a.id=l.area_id')->field('l.name as title,l.id,l.cover,l.area_id')
+        $countyAllLists = DigitalLine::alias('l')->join([DigitalArea::getTable() => 'a'], 'a.id=l.area_id')->field('l.name as title,l.id,l.cover,l.area_id,l.run_status')
             ->where('l.channel', $channel)->where('l.shop_id', $shop_id)->where('l.status', self::LINE_STATUS_OK)->where('a.status', self::AREA_STATUS_OK)
             ->order(['l.sorts', 'l.id'])->select()->toArray();
 
@@ -756,6 +756,7 @@ class DigitalLogic extends BaseService
                     $area_data[] = [
                         'id' => encrypt($v['id'], Status::ENCRYPT_DIGITAL),
                         'title' => $v['title'],
+                        'run_status' => $v['run_status'],
                         'cover' => getBucket('digital_line', 'cover', $v['cover']),
                         'start' => isset($sites[$v['id']]['first']) ? $sites[$v['id']]['first'] : '',
                         'end' => isset($sites[$v['id']]['last']) ? $sites[$v['id']]['last'] : '',
