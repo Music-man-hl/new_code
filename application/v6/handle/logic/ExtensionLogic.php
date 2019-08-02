@@ -168,7 +168,7 @@ class ExtensionLogic extends BaseService
                 'order' => $orderModel->order,
                 'uid' => $orderModel->extension_user
             ];
-            MyLog::info('[rabbitMQ-start]->订单完成推广订单事件推送开始');
+            MyLog::info('[rabbitMQ-start]->订单完成推广订单事件推送开始 order:' . $orderModel->order);
             RabbitMQ::service()->publish(json_encode($data), config('rabbitMQ.extension_exchange'), config('rabbitMQ.extension_commission_routing_key'));
             MyLog::info('[rabbitMQ-end]->订单完成推广订单事件推送结束');
         }
