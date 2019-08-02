@@ -26,4 +26,6 @@ return [
     'extension_exchange' => 'micro',
     //分销routing_key
     'extension_routing_key'=>'distribution.reckon',
+
+    'extension_commission_routing_key'=>'distribution.commission',
 ];

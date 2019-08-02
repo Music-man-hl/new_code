@@ -159,6 +159,22 @@ class ExtensionLogic extends BaseService
         }
     }
 
+    public static function completeSendMq($orderModel): void
+    {
+        if ($orderModel->extension_user) {
+            $data = [
+                'channel' => $orderModel->channel,
+                'shop' => $orderModel->shop_id,
+                'order' => $orderModel->order,
+                'uid' => $orderModel->extension_user
+            ];
+            MyLog::info('[rabbitMQ-start]->订单完成推广订单事件推送开始 order:' . $orderModel->order);
+            RabbitMQ::service()->publish(json_encode($data), config('rabbitMQ.extension_exchange'), config('rabbitMQ.extension_commission_routing_key'));
+            MyLog::info('[rabbitMQ-end]->订单完成推广订单事件推送结束');
+        }
+
+    }
+
     //申请
     public function application($channel, $userId, $params)
     {

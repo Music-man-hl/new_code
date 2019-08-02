@@ -2,6 +2,7 @@
 
 namespace app\v6\handle\hook\shop;
 
+use app\v6\handle\logic\ExtensionLogic;
 use app\v6\model\Main\InformTpl;
 use app\v6\model\Main\Shop;
 use app\v6\model\Shop\Coupon;
@@ -13,6 +14,7 @@ use app\v6\model\Shop\OrderContact;
 use app\v6\model\Shop\OrderExt;
 use app\v6\model\Shop\OrderInfo;
 use app\v6\model\Shop\OrderPaylog;
+use app\v6\model\Shop\OrderRefundLog;
 use app\v6\model\Shop\OrderRetail;
 use app\v6\model\Shop\Product;
 use app\v6\model\Shop\ProductRetailItem;
@@ -183,6 +185,7 @@ class OrderLogic
                 'product_item_id' => $data['id'],
                 'transport_type' => $data['transport_type'],
                 'transport_fee' => $data['transport_fee'] ?: 0,
+                'transport_fee_type' => $productRetailItem->ext->transport_fee_type,
                 'transport_explain' => $productRetailItem->ext->explain,
                 'receive_address' => json_encode($data['receive_address']) ?: '',
                 'take_address' => json_encode($data['take_address']) ?: '',
@@ -229,9 +232,18 @@ class OrderLogic
         if (
             in_array($order['status'], [Status::ORDER_PAY, Status::ORDER_CONFIRM]) &&
             in_array($order['refund_status'], [Status::REFUND_DEFAULT, Status::REFUND_REFUSE]) &&
-            $data['is_refund'] == 1
+            ($data['is_refund'] == 1)
         ) {
             $refund = true;
+        }
+
+        $moveTime = 0;
+        if ($order['refund_status'] == 2) {
+            $orderRefundLogs = OrderRefundLog::where('refund_id', $order['rid'])->order('create')->column('create');
+            $iMax = count($orderRefundLogs);
+            for ($i = 0; $i < $iMax; $i += 2) {
+                $moveTime += $orderRefundLogs[$i + 1] - $orderRefundLogs[$i];
+            }
         }
         $detail = [
             'type' => $order['type'],
@@ -255,7 +267,7 @@ class OrderLogic
             ],
             'order_time' => date('Y-m-d H:m:s', $order['create']),
             'transport_time' => $order['confirm_time'],//发货时间
-            'complete_time' => (10 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - (($order['rupdate'] ?? 0) - ($order['rcreate'] ?? 0))),
+            'complete_time' => (10 * 24 * 60 * 60) - ((NOW - $order['confirm_time']) - $moveTime),
         ];
         return array_merge($detail, $orderRetailData->toArray());
     }
@@ -406,6 +418,7 @@ class OrderLogic
         if (!$order->together('ext')->save()) {
             return error(50000, '订单操作失败');
         }
+        ExtensionLogic::completeSendMq($order);
         return success();
     }
 
