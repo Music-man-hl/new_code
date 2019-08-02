@@ -27,5 +27,5 @@ return [
     //分销routing_key
     'extension_routing_key'=>'distribution.reckon',
 
-    'extension_commission_routing_key'=>'distribution.commissions',
+    'extension_commission_routing_key'=>'distribution.commission',
 ];
