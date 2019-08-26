@@ -353,7 +353,7 @@ class DigitalLogic extends BaseService
         if (empty($id)) error(40000, 'id不正确');
 
         $data = DigitalLine::where('id', $id)->where('channel', $channel)->where('shop_id', $shop_id)->where('status', self::LINE_STATUS_OK)
-            ->field('cover,intro,intro_url as url,appid,app_url,app_data as data,run_time,run_status')->find();
+            ->field('cover,intro,intro_url as url,appid,app_url,app_data as data,run_time,run_status,web_url')->find();
 
         if (empty($data)) {
             error(50000, '没有找到此单线');
@@ -361,7 +361,7 @@ class DigitalLogic extends BaseService
 
         $data['cover'] = getBucket('digital_line', 'cover', $data['cover']);
 
-        success(empty($data) ? ['cover' => '', 'intro' => '', 'url' => '', 'appid' => '', 'app_url' => '', 'data' => '', 'run_time' => '', 'run_status' => 1] : $data);
+        success(empty($data) ? ['cover' => '', 'intro' => '', 'url' => '', 'appid' => '', 'app_url' => '', 'data' => '', 'run_time' => '', 'run_status' => 1,'web_url'=>''] : $data);
 
     }
 
